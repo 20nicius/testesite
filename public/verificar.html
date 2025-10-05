@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Recuperar Senha</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    background: linear-gradient(to bottom right, #0e1522, #00616C);
+      display: flex;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+    }
+    .box {
+      background: #222;
+      padding: 30px;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 400px;
+      color: white;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #mensagem {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>🔒 Recuperar Senha</h2>
+
+    <input type="email" id="email" placeholder="Seu e-mail" required />
+    <button onclick="enviarCodigo()">📩 Enviar Código</button>
+
+    <input type="text" id="codigo" placeholder="Código recebido" />
+    <input type="password" id="novaSenha" placeholder="Nova senha" />
+
+    <button onclick="redefinir()">🔁 Redefinir Senha</button>
+
+    <div id="mensagem"></div>
+  </div>
+
+  <script>
+    async function enviarCodigo() {
+      const email = document.getElementById('email').value;
+      const msg = document.getElementById('mensagem');
+
+      if (!email) {
+        msg.textContent = 'Informe seu e-mail.';
+        msg.style.color = 'red';
+        return;
+      }
+
+      const res = await fetch('/enviar-codigo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      const texto = await res.text();
+      msg.textContent = texto;
+      msg.style.color = res.ok ? 'green' : 'red';
+    }
+
+    async function redefinir() {
+      const email = document.getElementById('email').value;
+      const codigo = document.getElementById('codigo').value;
+      const senha = document.getElementById('novaSenha').value;
+      const msg = document.getElementById('mensagem');
+
+      if (!email || !codigo || !senha) {
+        msg.textContent = 'Preencha todos os campos.';
+        msg.style.color = 'red';
+        return;
+      }
+
+      const res = await fetch('/redefinir-senha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, codigo, password: senha })
+      });
+
+      const texto = await res.text();
+      msg.textContent = texto;
+      msg.style.color = res.ok ? 'green' : 'red';
+
+      if (res.ok) {
+        setTimeout(() => window.location.href = '/login.html', 2000);
+      }
+    }
+  </script>
+</body>
+</html>
+

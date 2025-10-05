@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configurações - U.M.C.A.D</title>
+  
+  <!-- Manifest para PWA e notificações push -->
+  <link rel="manifest" href="/manifest.json">
+  
+  <!-- Meta tags para PWA -->
+  <meta name="theme-color" content="#29b6f6">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="U.M.C.A.D">
+  
+  <!-- Ícones -->
+  <link rel="icon" type="image/png" sizes="256x256" href="/imagens/icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png">
+  <link rel="apple-touch-icon" href="/imagens/icon.png">
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to bottom right, #0e1522, #00616C);
+      color: white;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* Container principal */
+    .main-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 60px 20px;
+    }
+
+    /* Navegação responsiva */
+    .nav-wrapper {
+      width: 100%;
+      max-width: 1100px;
+      background-color: rgb(17, 17, 17);
+      border: 1px solid rgba(255, 255, 255, 0.171);
+      border-radius: 18px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      font-size: 145%;
+      font-weight: 800;
+      gap: 8px;
+    }
+
+    .logo span {
+      font-size: 93%;
+      font-weight: 800;
+    }
+
+    nav {
+      display: flex;
+      gap: clamp(16px, 4vw, 32px);
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #c3c3c3;
+      font-weight: 500;
+      font-size: clamp(0.9rem, 2vw, 1rem);
+      transition: color 0.3s ease;
+      white-space: nowrap;
+    }
+
+    nav a:hover {
+      color: white;
+    }
+
+    /* Container de configurações */
+    .config-container {
+      width: 92%;
+      max-width: 900px;
+      background-color: rgba(17, 17, 17, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.171);
+      border-radius: 18px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 40px;
+      margin-bottom: 40px;
+    }
+
+    .config-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .config-header h1 {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      font-weight: 800;
+      margin-bottom: 1rem;
+      color: #29b6f6;
+    }
+
+    .config-header p {
+      font-size: clamp(1rem, 2vw, 1.1rem);
+      color: #c2c2c2;
+      font-weight: 300;
+    }
+
+    /* Seções de configuração */
+    .config-section {
+      margin-bottom: 40px;
+      padding: 30px;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .config-section h2 {
+      font-size: clamp(1.3rem, 2.5vw, 1.6rem);
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #7edfff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .config-section p {
+      font-size: 0.95rem;
+      color: #b0b0b0;
+      margin-bottom: 25px;
+      line-height: 1.5;
+    }
+
+    /* Formulário */
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #e0e0e0;
+      font-size: 0.95rem;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .form-control {
+      background-color: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: white;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #29b6f6;
+      background-color: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 0 0 3px rgba(41, 182, 246, 0.1);
+    }
+
+    .form-control[type="range"] {
+      -webkit-appearance: none;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+      outline: none;
+    }
+
+    .form-control[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #29b6f6;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .form-control[type="range"]::-webkit-slider-thumb:hover {
+      background: #1e88e5;
+      transform: scale(1.1);
+    }
+
+    .form-control[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      background: #29b6f6;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
+
+    .range-value {
+      min-width: 60px;
+      text-align: center;
+      font-weight: 600;
+      color: #29b6f6;
+      font-size: 1rem;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #29b6f6;
+    }
+
+    .checkbox-group label {
+      margin-bottom: 0;
+      cursor: pointer;
+    }
+
+    /* Botões */
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background-color: #29b6f6;
+      color: #000;
+    }
+
+    .btn-primary:hover {
+      background-color: #1e88e5;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      color: #29b6f6;
+      border: 2px solid #29b6f6;
+    }
+
+    .btn-secondary:hover {
+      background-color: #29b6f6;
+      color: #000;
+    }
+
+    .btn-danger {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background-color: #d32f2f;
+      transform: translateY(-2px);
+    }
+
+    .btn-warning {
+      background-color: #ff9800;
+      color: #000;
+    }
+
+    .btn-warning:hover {
+      background-color: #f57c00;
+    }
+
+    /* Seção de gerenciamento de conta */
+    .account-management {
+      border-top: 2px solid rgba(255, 255, 255, 0.1);
+      padding-top: 40px;
+      margin-top: 40px;
+    }
+
+    .account-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .delete-account-container {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      margin-top: 30px;
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+      .config-container {
+        padding: 20px;
+      }
+
+      .form-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .account-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .account-actions .btn {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+    }
+
+    /* Toast notifications */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: rgba(17, 17, 17, 0.95);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 8px;
+      border-left: 4px solid #29b6f6;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.3s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .toast.success {
+      border-left-color: #4caf50;
+    }
+
+    .toast.error {
+      border-left-color: #f44336;
+    }
+
+    .toast.warning {
+      border-left-color: #ff9800;
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <!-- Navegação -->
+    <div class="nav-wrapper">
+      <div class="logo">
+        U.M.C.A.D<span>⚙️</span> 
+      </div>
+      <nav>
+        <a href="/">Início</a>
+        <a href="/dados">Dados</a>
+      </nav>
+    </div>
+
+    <!-- Container de configurações -->
+    <div class="config-container">
+      <div class="config-header">
+        <h1>⚙️ Configurações</h1>
+        <p>Personalize suas preferências de notificação e gerencie sua conta</p>
+      </div>
+
+      <form id="configForm">
+        <!-- Seção de Notificações Push -->
+        <div class="config-section">
+          <h2>🔔 Notificações Push</h2>
+          <p>Configure quando você deseja receber notificações do sistema de monitoramento.</p>
+          
+          <div class="checkbox-group">
+            <input type="checkbox" id="enableNotifications" name="enableNotifications">
+            <label for="enableNotifications">Ativar notificações push</label>
+          </div>
+          
+          <div class="checkbox-group">
+            <input type="checkbox" id="dailyReports" name="dailyReports">
+            <label for="dailyReports">Receber relatórios diários</label>
+          </div>
+        </div>
+
+        <!-- Seção de Configurações de Umidade -->
+        <div class="config-section">
+          <h2>💧 Configurações de Umidade</h2>
+          <p>Defina os limites de umidade do ar e do solo para receber alertas.</p>
+          
+          <div class="checkbox-group">
+            <input type="checkbox" id="humidityAlertsEnabled" name="humidityAlertsEnabled">
+            <label for="humidityAlertsEnabled">Ativar alertas de umidade</label>
+          </div>
+
+          <div class="form-group">
+            <label for="humidityMin">Umidade mínima do ar (%)</label>
+            <div class="form-row">
+              <input type="range" id="humidityMin" name="humidityMin" min="0" max="100" value="30" class="form-control">
+              <span class="range-value" id="humidityMinValue">30%</span>
+            </div>
+            <small style="color: #b0b0b0;">Receber alerta quando a umidade do ar estiver abaixo deste valor</small>
+          </div>
+
+          <div class="form-group">
+            <label for="humidityMax">Umidade máxima do ar (%)</label>
+            <div class="form-row">
+              <input type="range" id="humidityMax" name="humidityMax" min="0" max="100" value="80" class="form-control">
+              <span class="range-value" id="humidityMaxValue">80%</span>
+            </div>
+            <small style="color: #b0b0b0;">Receber alerta quando a umidade do ar estiver acima deste valor</small>
+          </div>
+
+          <div class="form-group">
+            <label for="soilHumidityMin">Umidade mínima do solo (%)</label>
+            <div class="form-row">
+              <input type="range" id="soilHumidityMin" name="soilHumidityMin" min="0" max="100" value="20" class="form-control">
+              <span class="range-value" id="soilHumidityMinValue">20%</span>
+            </div>
+            <small style="color: #b0b0b0;">Receber alerta quando a umidade do solo estiver abaixo deste valor</small>
+          </div>
+
+          <div class="form-group">
+            <label for="soilHumidityMax">Umidade máxima do solo (%)</label>
+            <div class="form-row">
+              <input type="range" id="soilHumidityMax" name="soilHumidityMax" min="0" max="100" value="90" class="form-control">
+              <span class="range-value" id="soilHumidityMaxValue">90%</span>
+            </div>
+            <small style="color: #b0b0b0;">Receber alerta quando a umidade do solo estiver acima deste valor</small>
+          </div>
+        </div>
+
+        <!-- Seção de Configurações de Temperatura -->
+        <div class="config-section">
+          <h2>🌡️ Configurações de Temperatura</h2>
+          <p>Defina os limites de temperatura para receber alertas (0°C a 50°C).</p>
+          
+          <div class="checkbox-group">
+            <input type="checkbox" id="temperatureAlertsEnabled" name="temperatureAlertsEnabled">
+            <label for="temperatureAlertsEnabled">Ativar alertas de temperatura</label>
+          </div>
+
+          <div class="form-group">
+            <label for="temperatureMin">Temperatura mínima (°C)</label>
+            <div class="form-row">
+              <input type="range" id="temperatureMin" name="temperatureMin" min="0" max="50" value="10" class="form-control">
+              <span class="range-value" id="temperatureMinValue">10°C</span>
+            </div>
+            <small style="color: #b0b0b0;">Receber alerta quando a temperatura estiver abaixo deste valor</small>
+          </div>
+
+          <div class="form-group">
+            <label for="temperatureMax">Temperatura máxima (°C)</label>
+            <div class="form-row">
+              <input type="range" id="temperatureMax" name="temperatureMax" min="0" max="50" value="35" class="form-control">
+              <span class="range-value" id="temperatureMaxValue">35°C</span>
+            </div>
+            <small style="color: #b0b0b0;">Receber alerta quando a temperatura estiver acima deste valor</small>
+          </div>
+        </div>
+
+        <!-- Seção de Configurações de Chuva -->
+        <div class="config-section">
+          <h2>🌧️ Configurações de Chuva</h2>
+          <p>Configure alertas relacionados à detecção de chuva.</p>
+          
+          <div class="checkbox-group">
+            <input type="checkbox" id="rainAlertsEnabled" name="rainAlertsEnabled">
+            <label for="rainAlertsEnabled">Ativar alertas de chuva</label>
+          </div>
+
+          <div class="checkbox-group">
+            <input type="checkbox" id="rainStartAlert" name="rainStartAlert">
+            <label for="rainStartAlert">Notificar quando começar a chover</label>
+          </div>
+
+          <div class="checkbox-group">
+            <input type="checkbox" id="rainStopAlert" name="rainStopAlert">
+            <label for="rainStopAlert">Notificar quando parar de chover</label>
+          </div>
+
+          <div class="form-group">
+            <label for="noRainDays">Dias sem chuva para alerta</label>
+            <div class="form-row">
+              <input type="range" id="noRainDays" name="noRainDays" min="1" max="30" value="7" class="form-control">
+              <span class="range-value" id="noRainDaysValue">7 dias</span>
+            </div>
+            <small style="color: #b0b0b0;">Receber alerta após este número de dias consecutivos sem chuva</small>
+          </div>
+        </div>
+
+        <!-- Seção de Configurações de Gases -->
+        <div class="config-section">
+          <h2>⚠️ Configurações de Gases</h2>
+          <p>Configure alertas para detecção de gases perigosos.</p>
+          
+          <div class="checkbox-group">
+            <input type="checkbox" id="gasAlertsEnabled" name="gasAlertsEnabled">
+            <label for="gasAlertsEnabled">Ativar alertas de gases</label>
+          </div>
+
+          <div class="form-group">
+            <label for="inflammableGasThreshold">Limite de gás inflamável (%)</label>
+            <div class="form-row">
+              <input type="range" id="inflammableGasThreshold" name="inflammableGasThreshold" min="0" max="100" value="20" class="form-control">
+              <span class="range-value" id="inflammableGasThresholdValue">20%</span>
+            </div>
+            <small style="color: #b0b0b0;">Receber alerta quando a concentração de gás inflamável estiver acima deste valor</small>
+          </div>
+
+          <div class="form-group">
+            <label for="toxicGasThreshold">Limite de gás tóxico (%)</label>
+            <div class="form-row">
+              <input type="range" id="toxicGasThreshold" name="toxicGasThreshold" min="0" max="100" value="15" class="form-control">
+              <span class="range-value" id="toxicGasThresholdValue">15%</span>
+            </div>
+            <small style="color: #b0b0b0;">Receber alerta quando a concentração de gás tóxico estiver acima deste valor</small>
+          </div>
+
+          <div class="checkbox-group">
+            <input type="checkbox" id="criticalGasAlert" name="criticalGasAlert">
+            <label for="criticalGasAlert">Alertas críticos para níveis perigosos de gases</label>
+          </div>
+        </div>
+
+        <!-- Botões de ação do formulário -->
+        <div class="config-section">
+          <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+            <button type="submit" class="btn btn-primary">💾 Salvar Configurações</button>
+            <button type="button" id="resetBtn" class="btn btn-secondary">🔄 Restaurar Padrões</button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Seção de Gerenciamento de Conta -->
+      <div class="config-section account-management">
+        <h2>👤 Gerenciamento de Conta</h2>
+        <p>Gerencie seus dados e configurações de conta.</p>
+        
+        <div class="account-actions">
+          <button type="button" id="clearHistoryBtn" class="btn btn-warning">
+            🗑️ Apagar Histórico
+          </button>
+          
+          <button type="button" id="resetPasswordBtn" class="btn btn-secondary">
+            🔑 Redefinir Senha
+          </button>
+        </div>
+
+        <!-- Botão de excluir conta (centralizado e em vermelho) -->
+        <div class="delete-account-container">
+          <button type="button" id="deleteAccountBtn" class="btn btn-danger">
+            ❌ Excluir Conta
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toastContainer"></div>
+
+  <script>
+    // Configurações padrão
+    const defaultSettings = {
+      enableNotifications: true,
+      dailyReports: true,
+      humidityAlertsEnabled: true,
+      humidityMin: 30,
+      humidityMax: 80,
+      soilHumidityMin: 20,
+      soilHumidityMax: 90,
+      temperatureAlertsEnabled: true,
+      temperatureMin: 10,
+      temperatureMax: 35,
+      rainAlertsEnabled: true,
+      rainStartAlert: true,
+      rainStopAlert: false,
+      noRainDays: 7,
+      gasAlertsEnabled: true,
+      inflammableGasThreshold: 20,
+      toxicGasThreshold: 15,
+      criticalGasAlert: true
+    };
+
+    // Função para mostrar toast
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      
+      const container = document.getElementById('toastContainer');
+      container.appendChild(toast);
+      
+      setTimeout(() => toast.classList.add('show'), 100);
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => container.removeChild(toast), 300);
+      }, 3000);
+    }
+
+    // Função para atualizar valores dos ranges
+    function updateRangeValues() {
+      // Umidade
+      document.getElementById('humidityMinValue').textContent = document.getElementById('humidityMin').value + '%';
+      document.getElementById('humidityMaxValue').textContent = document.getElementById('humidityMax').value + '%';
+      document.getElementById('soilHumidityMinValue').textContent = document.getElementById('soilHumidityMin').value + '%';
+      document.getElementById('soilHumidityMaxValue').textContent = document.getElementById('soilHumidityMax').value + '%';
+      
+      // Temperatura
+      document.getElementById('temperatureMinValue').textContent = document.getElementById('temperatureMin').value + '°C';
+      document.getElementById('temperatureMaxValue').textContent = document.getElementById('temperatureMax').value + '°C';
+      
+      // Chuva
+      const noRainDays = document.getElementById('noRainDays').value;
+      document.getElementById('noRainDaysValue').textContent = noRainDays + (noRainDays == 1 ? ' dia' : ' dias');
+      
+      // Gases
+      document.getElementById('inflammableGasThresholdValue').textContent = document.getElementById('inflammableGasThreshold').value + '%';
+      document.getElementById('toxicGasThresholdValue').textContent = document.getElementById('toxicGasThreshold').value + '%';
+    }
+
+    // Função para carregar configurações do servidor
+    async function loadSettings() {
+      try {
+        const response = await fetch('/api/notification-settings', {
+          method: 'GET',
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const settings = await response.json();
+          
+          // Aplicar configurações carregadas
+          Object.keys(settings).forEach(key => {
+            const element = document.getElementById(key);
+            if (element) {
+              if (element.type === 'checkbox') {
+                element.checked = settings[key];
+              } else {
+                element.value = settings[key];
+              }
+            }
+          });
+          
+          updateRangeValues();
+          showToast('Configurações carregadas com sucesso!', 'success');
+        } else {
+          // Se não conseguir carregar, usar configurações padrão
+          applyDefaultSettings();
+          showToast('Usando configurações padrão', 'warning');
+        }
+      } catch (error) {
+        console.error('Erro ao carregar configurações:', error);
+        applyDefaultSettings();
+        showToast('Erro ao carregar configurações. Usando padrões.', 'error');
+      }
+    }
+
+    // Função para aplicar configurações padrão
+    function applyDefaultSettings() {
+      Object.keys(defaultSettings).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'checkbox') {
+            element.checked = defaultSettings[key];
+          } else {
+            element.value = defaultSettings[key];
+          }
+        }
+      });
+      updateRangeValues();
+    }
+
+    // Função para salvar configurações
+    async function saveSettings(formData) {
+      try {
+        const response = await fetch('/api/notification-settings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+          showToast('Configurações salvas com sucesso!', 'success');
+          return true;
+        } else {
+          const error = await response.json();
+          showToast('Erro ao salvar configurações: ' + (error.error || 'Erro desconhecido'), 'error');
+          return false;
+        }
+      } catch (error) {
+        console.error('Erro ao salvar configurações:', error);
+        showToast('Erro de conexão ao salvar configurações', 'error');
+        return false;
+      }
+    }
+
+    // Função para apagar histórico
+    async function clearHistory() {
+      if (!confirm('Tem certeza que deseja apagar todo o histórico de dados? Esta ação não pode ser desfeita.')) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/clear-history', {
+          method: 'POST',
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          showToast('Histórico apagado com sucesso!', 'success');
+        } else {
+          const error = await response.json();
+          showToast('Erro ao apagar histórico: ' + (error.error || 'Erro desconhecido'), 'error');
+        }
+      } catch (error) {
+        console.error('Erro ao apagar histórico:', error);
+        showToast('Erro de conexão ao apagar histórico', 'error');
+      }
+    }
+
+    // Função para redefinir senha
+    async function resetPassword() {
+      const newPassword = prompt('Digite sua nova senha:');
+      if (!newPassword) return;
+
+      const confirmPassword = prompt('Confirme sua nova senha:');
+      if (newPassword !== confirmPassword) {
+        showToast('As senhas não coincidem!', 'error');
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        showToast('A senha deve ter pelo menos 6 caracteres!', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/reset-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ newPassword })
+        });
+
+        if (response.ok) {
+          showToast('Senha redefinida com sucesso!', 'success');
+        } else {
+          const error = await response.json();
+          showToast('Erro ao redefinir senha: ' + (error.error || 'Erro desconhecido'), 'error');
+        }
+      } catch (error) {
+        console.error('Erro ao redefinir senha:', error);
+        showToast('Erro de conexão ao redefinir senha', 'error');
+      }
+    }
+
+    // Função para excluir conta
+    async function deleteAccount() {
+      if (!confirm('⚠️ ATENÇÃO: Tem certeza que deseja excluir sua conta permanentemente?\n\nEsta ação irá:\n- Apagar todos os seus dados\n- Remover seu histórico\n- Cancelar todas as configurações\n\nEsta ação NÃO PODE ser desfeita!')) {
+        return;
+      }
+
+      const confirmation = prompt('Para confirmar a exclusão da conta, digite "EXCLUIR" (em maiúsculas):');
+      if (confirmation !== 'EXCLUIR') {
+        showToast('Exclusão cancelada', 'warning');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/delete-account', {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          showToast('Conta excluída com sucesso. Redirecionando...', 'success');
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 2000);
+        } else {
+          const error = await response.json();
+          showToast('Erro ao excluir conta: ' + (error.error || 'Erro desconhecido'), 'error');
+        }
+      } catch (error) {
+        console.error('Erro ao excluir conta:', error);
+        showToast('Erro de conexão ao excluir conta', 'error');
+      }
+    }
+
+    // Inicialização da página
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Página de configurações carregada');
+      
+      // Carregar configurações do servidor
+      loadSettings();
+      
+      // Adicionar event listeners para os ranges
+      const ranges = document.querySelectorAll('input[type="range"]');
+      ranges.forEach(range => {
+        range.addEventListener('input', updateRangeValues);
+      });
+      
+      // Event listener para o formulário
+      document.getElementById('configForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const settings = {};
+        
+        // Converter FormData para objeto
+        for (let [key, value] of formData.entries()) {
+          const element = document.getElementById(key);
+          if (element && element.type === 'checkbox') {
+            settings[key] = element.checked;
+          } else if (element && (element.type === 'range' || element.type === 'number')) {
+            settings[key] = parseInt(value);
+          } else {
+            settings[key] = value;
+          }
+        }
+        
+        // Adicionar checkboxes não marcados (FormData não inclui checkboxes desmarcados)
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+          if (!settings.hasOwnProperty(checkbox.name)) {
+            settings[checkbox.name] = false;
+          }
+        });
+        
+        await saveSettings(settings);
+      });
+      
+      // Event listener para restaurar padrões
+      document.getElementById('resetBtn').addEventListener('click', function() {
+        if (confirm('Tem certeza que deseja restaurar as configurações padrão?')) {
+          applyDefaultSettings();
+          showToast('Configurações padrão restauradas', 'success');
+        }
+      });
+      
+      // Event listeners para gerenciamento de conta
+      document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
+      document.getElementById('resetPasswordBtn').addEventListener('click', resetPassword);
+      document.getElementById('deleteAccountBtn').addEventListener('click', deleteAccount);
+    });
+  </script>
+</body>
+</html>

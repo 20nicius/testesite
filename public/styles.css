@@ -1,0 +1,100 @@
+/* Estilo geral */
+body {
+ background: linear-gradient(to bottom right, #0e1522, #00616C);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-color: #f0f0f0;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Logo no topo */
+.logo-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+     box-shadow: 0 0 20px 5px rgba(0, 191, 255, 0.5);
+    border-radius: 20px;
+}
+
+.logo-site {
+    width: 120px;
+    height: auto;
+}
+
+/* Organização das nuvens */
+.nuvens-container {
+    display: flex;
+    gap: 40px;
+}
+
+/* Colunas lado a lado */
+.coluna {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Estilo das nuvens */
+.nuvem {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Nome do sensor */
+.titulo {
+    font-family: var(--font-family-karla);
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    color: white;
+    margin-bottom: 5px;
+}
+
+/* Imagens das nuvens */
+.nuvem-img {
+    width: 150px;
+    height: auto;
+    position: relative;
+    z-index: 0;
+}
+
+/* Exibição dos dados sobre as nuvens */
+/* Ajuste na exibição dos valores dentro das nuvens */
+.valor-sensor {
+    position: absolute;
+    top: 70%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-family-karla);
+    font-size: 20px;
+    font-weight: bold;
+    color: black;
+    background: none;
+    padding: 0;
+    border-radius: none;
+    white-space: nowrap;
+    z-index: 1;
+    text-align: center;
+    width: 80%; /* Ajuste para garantir um melhor encaixe */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+/* Nuvem centralizada abaixo das colunas */
+.nuvem-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}

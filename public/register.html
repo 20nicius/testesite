@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cadastro de Conta</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #0e1522, #00616C);
+      display: flex;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+    }
+
+    .box {
+      background: #222;
+      padding: 30px;
+      border-radius: 8px;
+      color: #fff;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 94.5%;
+      margin-bottom: 12px;
+      padding: 10px;
+      font-size: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #f8f8f8;
+      color: #000;
+    }
+
+    .btn {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 10px;
+      font-size: 16.1px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: #0056b3;
+    }
+
+    #mensagem {
+      margin-top: 10px;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h2>🔐 Criar Conta</h2>
+
+    <input type="email" id="email" placeholder="Seu e-mail" required />
+    <button class="btn" onclick="enviarCodigo()">📨 Enviar Código</button>
+    <input type="text" id="codigo" placeholder="Código recebido" />
+    <input type="password" id="senha" placeholder="Sua senha" />
+    <button class="btn" onclick="registrar()">✅ Cadastrar</button>
+
+    <div id="mensagem"></div>
+  </div>
+
+  <script>
+    async function enviarCodigo() {
+      const email = document.getElementById('email').value;
+      const msg = document.getElementById('mensagem');
+
+      if (!email) {
+        msg.textContent = 'Informe seu e-mail.';
+        msg.style.color = 'red';
+        return;
+      }
+
+      const res = await fetch('/enviar-codigo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      const texto = await res.text();
+      msg.textContent = texto;
+      msg.style.color = res.ok ? 'green' : 'red';
+    }
+
+    async function registrar() {
+      const email = document.getElementById('email').value;
+      const codigo = document.getElementById('codigo').value;
+      const senha = document.getElementById('senha').value;
+      const msg = document.getElementById('mensagem');
+
+      if (!email || !codigo || !senha) {
+        msg.textContent = 'Preencha todos os campos.';
+        msg.style.color = 'red';
+        return;
+      }
+
+      const res = await fetch('/registrar-unificado', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, codigo, password: senha })
+      });
+
+      const texto = await res.text();
+      msg.textContent = texto;
+      msg.style.color = res.ok ? 'green' : 'red';
+
+      if (res.ok) {
+        setTimeout(() => window.location.href = '/login.html', 2000);
+      }
+    }
+  </script>
+
+</body>
+</html>
+

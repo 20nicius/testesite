@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' https://accounts.google.com 'unsafe-inline';
+    frame-src 'self' https://accounts.google.com/gsi/;
+    style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style;
+    connect-src 'self' https://accounts.google.com;
+  ">
+  <title>Login com E-mail ou Google</title>
+
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #0e1522, #00616C);
+      display: flex;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+    }
+    .container {
+      background: #222;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+      color: white;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input, button {
+      display: block;
+      width: 100%;
+      margin-bottom: 15px;
+      padding: 10px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #256cd8;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover {
+      background-color: #2bc3ff;
+    }
+    #mensagem {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .link {
+      text-align: center;
+      margin-top: 15px;
+    }
+    .link a {
+      color: #00b7ff;
+      text-decoration: none;
+    }
+    .link a:hover {
+      text-decoration: underline;
+    }
+    #g_id_signin {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <form id="loginForm">
+      <div class="login">
+      <h2>🔑 Login</h2>
+      </div>
+      <input type="email" id="email" placeholder="Seu e-mail" required />
+      <input type="password" id="password" placeholder="Sua senha" required />
+      <button type="submit">Entrar com E-mail</button>
+      <p id="mensagem"></p>
+    </form>
+
+    <!-- Botão Google -->
+    <div id="g_id_signin"></div>
+
+    <div class="link">
+      <p>Não tem uma conta? <a href="/register.html">Cadastre-se aqui</a></p>
+      <p><a href="/verificar.html">Esqueci minha senha</a></p>
+    </div>
+  </div>
+
+  <script>
+    // Inicializa e renderiza o botão do Google
+    window.onload = () => {
+      google.accounts.id.initialize({
+        client_id: '84552939789-e96jpehka17gfhf3780v36ep6v4mp3tc.apps.googleusercontent.com',
+        callback: handleCredentialResponse,
+        auto_select: false
+      });
+      google.accounts.id.renderButton(
+        document.getElementById('g_id_signin'),
+        {
+          theme: 'outline',
+          size: 'large',
+          shape: 'rectangular',
+          text: 'signin_with',
+          logo_alignment: 'left'
+        }
+      );
+    };
+
+    const form = document.getElementById('loginForm');
+    const mensagem = document.getElementById('mensagem');
+
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      mensagem.textContent = '';
+      const email = form.email.value;
+      const password = form.password.value;
+    
+      try {
+        const res = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        mensagem.textContent = data.error || (res.ok ? 'Login efetuado' : 'Erro no login');
+        mensagem.style.color = res.ok ? 'green' : 'red';
+        if (res.ok && data.token) {
+          localStorage.setItem('jwt', data.token); // <-- SALVA O JWT AQUI
+          setTimeout(() => window.location.href = '/', 1500);
+        }
+      } catch {
+        mensagem.textContent = 'Erro ao conectar com o servidor.';
+        mensagem.style.color = 'red';
+      }
+    });
+
+    async function handleCredentialResponse(response) {
+      mensagem.textContent = '';
+      const token = response.credential;
+      try {
+        const res = await fetch('/google-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+        if (res.status === 403) {
+          const data = await res.json();
+          mostrarPopupSenha(data.email);
+          return;
+        }
+        const data = await res.json();
+        mensagem.textContent = data.error || (res.ok ? 'Login efetuado' : 'Erro no login');
+        mensagem.style.color = res.ok ? 'green' : 'red';
+        if (res.ok && data.token) {
+          localStorage.setItem('jwt', data.token); // <-- SALVA O JWT AQUI
+          setTimeout(() => window.location.href = '/', 1500);
+        }
+      } catch {
+        mensagem.textContent = 'Erro ao autenticar com Google.';
+        mensagem.style.color = 'red';
+      }
+    }
+
+function mostrarPopupSenha(emailGoogle) {
+  const popup = document.createElement('div');
+  Object.assign(popup.style, {
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    background: '#222', // novo fundo
+    color: '#fff',
+    padding: '20px',
+    boxShadow: '0 0 10px rgba(0,0,0,0.3)',
+    borderRadius: '8px',
+    zIndex: '9999',
+    width: '90%',
+    maxWidth: '320px',
+    textAlign: 'center',
+    fontFamily: 'Arial, sans-serif'
+  });
+
+  popup.innerHTML = `
+    <h3>👤 Criar senha para Google</h3>
+    <p>O e-mail <b>${emailGoogle}</b> ainda não está cadastrado.</p>
+    <input id="novaSenhaGoogle" type="password"
+      placeholder="Defina uma senha..." style="width:100%;padding:8px;margin:10px 0;border-radius:4px;border:none;" />
+    <button id="vincularBtn" style="padding:10px 12px;margin-bottom:8px;background:#256cd8;color:#fff;border:none;border-radius:4px;width:100%;">📌 Vincular e Entrar</button>
+    <button id="cancelBtn" style="padding:10px 12px;background:#e74c3c;color:#fff;border:none;border-radius:4px;width:100%;">❌ Cancelar</button>
+  `;
+
+  document.body.appendChild(popup);
+
+  document.getElementById('cancelBtn')
+    .addEventListener('click', () => popup.remove());
+
+  document.getElementById('vincularBtn')
+    .addEventListener('click', async () => {
+      const senha = document.getElementById('novaSenhaGoogle').value;
+      if (!senha || senha.length < 4) {
+        alert("⚠️ Defina uma senha válida (mínimo 4 caracteres).");
+        return;
+      }
+      try {
+        const res = await fetch('/vincular-google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: emailGoogle, password: senha })
+        });
+        const msg = await res.text();
+        const mensagem = document.getElementById('mensagem');
+        mensagem.textContent = msg;
+        mensagem.style.color = res.ok ? 'green' : 'red';
+        if (res.ok) {
+          popup.remove();
+          setTimeout(() => window.location.href = '/', 1500);
+        }
+      } catch {
+        alert("❌ Erro ao vincular Google.");
+      }
+    });
+}
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UMCAD</title>
+  
+  <!-- Manifest para PWA e notificações push -->
+  <link rel="manifest" href="/manifest.json">
+  
+  <!-- Meta tags para PWA -->
+  <meta name="theme-color" content="#29b6f6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="U.M.C.A.D">
+  
+  <!-- Ícones -->
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png">
+  <link rel="apple-touch-icon" href="/icon-192x192.png">
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to bottom right, #0e1522, #00616C);
+      color: white;
+      line-height: 1.6;
+    }
+
+    /* Container principal */
+    .main-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 60px 20px;
+    }
+
+    /* Navegação responsiva */
+    .nav-wrapper {
+      width: 100%;
+      max-width: 1100px;
+      background-color: rgb(17, 17, 17);
+      border: 1px solid rgba(255, 255, 255, 0.171);
+      border-radius: 18px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 80px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      font-size: clamp(1.3rem, 3vw, 1.7rem);
+      font-weight: 800;
+      gap: 8px;
+    }
+
+    .logo span {
+      font-size: clamp(1.2rem, 2.8vw, 1.5rem);
+      font-weight: 800;
+    }
+
+    nav {
+      display: flex;
+      gap: clamp(16px, 4vw, 32px);
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #c3c3c3;
+      font-weight: 500;
+      font-size: clamp(0.9rem, 2vw, 1rem);
+      transition: color 0.3s ease;
+      white-space: nowrap;
+    }
+
+    nav a:hover {
+      color: white;
+    }
+
+    /* Dropdown do usuário */
+    .usuario-logado {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .aba-usuario {
+      position: absolute;
+      top: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      background-color: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 10px;
+      z-index: 1000;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.3);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      width: 220px;
+    }
+
+    .usuario-logado:hover .aba-usuario,
+    .usuario-logado.ativo .aba-usuario {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .aba-usuario button {
+      background-color: transparent;
+      border: none;
+      color: #ff5555;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 6px;
+      text-align: left;
+    }
+
+    .aba-usuario button:hover {
+      text-decoration: underline;
+    }
+
+    /* Conteúdo principal */
+    .main-content {
+      text-align: center;
+      width: 100%;
+      max-width: 800px;
+      margin-bottom: 80px;
+      padding: 0 20px;
+    }
+
+    small {
+      color: #7edfff;
+      font-weight: 400;
+      font-size: clamp(0.85rem, 1.5vw, 0.95rem);
+      margin-bottom: 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      font-weight: 800;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    h2 {
+      font-size: clamp(1.5rem, 3.5vw, 2.6rem);
+      font-weight: 800;
+      margin-bottom: 20px;
+      letter-spacing: 0.5px;
+      line-height: 1.3;
+    }
+
+    p {
+      font-size: clamp(1rem, 2vw, 1.1rem);
+      color: #c2c2c2;
+      font-weight: 300;
+      margin-bottom: 34px;
+      line-height: 1.6;
+      letter-spacing: 0.2px;
+    }
+
+    /* Botões responsivos */
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .buttons a {
+      display: inline-block;
+      padding: 14px 28px;
+      border-radius: 16px;
+      font-weight: 500;
+      font-size: clamp(0.9rem, 1.8vw, 1rem);
+      letter-spacing: 0.5px;
+      text-decoration: none;
+      transition: 0.25s ease;
+      text-align: center;
+      min-width: 200px;
+    }
+
+    .btn-download {
+      background-color: #29b6f6;
+      color: #000;
+    }
+
+    .btn-download:hover {
+      background-color: #1e88e5;
+      transform: translateY(-2px);
+    }
+
+    .btn-github {
+      background-color: transparent;
+      color: #29b6f6;
+      border: 2px solid #29b6f6;
+    }
+
+    .btn-github:hover {
+      background-color: #29b6f6;
+      color: #000;
+      transform: translateY(-2px);
+    }
+
+    /* Seção de imagem responsiva */
+    .image-section {
+      width: 100%;
+      max-width: 1200px;
+      margin-bottom: 60px;
+      padding: 0 20px;
+    }
+
+    .image-container {
+      position: relative;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .image-background {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      background-color: rgba(0, 0, 0, 0.205);
+      border-radius: 16px;
+      border: 1px solid #000;
+      z-index: 0;
+    }
+
+    .featured-image {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: auto;
+      max-width: 100%;
+      border-radius: 16px;
+      object-fit: cover;
+    }
+
+    /* Separadores responsivos */
+    .divider {
+      width: 100%;
+      max-width: 1200px;
+      height: 2px;
+      background-color: rgb(80, 80, 80);
+      margin: 40px 0;
+    }
+
+    /* Seções de conteúdo */
+    .section-container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    .section-container h1 {
+      margin-bottom: 2rem;
+    }
+
+    .section-container p {
+      max-width: 800px;
+      margin: 0 auto 2rem auto;
+      text-align: left;
+    }
+
+    /* Estilo de fundo para seções */
+    .background-section {
+      width: 100%;
+      background-color: rgb(17, 17, 17);
+      padding: 60px 0;
+      margin: 40px 0;
+    }
+
+    /* ==================== ESTILOS PARA NOTIFICAÇÕES PUSH ==================== */
+    
+    /* Controles de notificação */
+    .notification-controls {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: rgba(17, 17, 17, 0.95);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      min-width: 200px;
+      display: none; /* Inicialmente oculto */
+    }
+
+    .notification-controls.show {
+      display: block;
+    }
+
+    .btn-notification {
+      background: linear-gradient(135deg, #29b6f6, #1e88e5);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      margin-bottom: 10px;
+      display: block;
+      width: 100%;
+      text-align: left;
+    }
+
+    .btn-notification:hover {
+      background: linear-gradient(135deg, #1e88e5, #1565c0);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(41, 182, 246, 0.3);
+    }
+
+    .btn-notification.active {
+      background: linear-gradient(135deg, #4CAF50, #388e3c);
+    }
+
+    .btn-notification.inactive {
+      background: linear-gradient(135deg, #757575, #616161);
+    }
+
+    .notification-status {
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      text-align: center;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .status-success {
+      background: rgba(76, 175, 80, 0.2);
+      color: #4CAF50;
+      border: 1px solid rgba(76, 175, 80, 0.3);
+    }
+
+    .status-warning {
+      background: rgba(255, 152, 0, 0.2);
+      color: #FF9800;
+      border: 1px solid rgba(255, 152, 0, 0.3);
+    }
+
+    .status-error {
+      background: rgba(244, 67, 54, 0.2);
+      color: #F44336;
+      border: 1px solid rgba(244, 67, 54, 0.3);
+    }
+
+    .btn-test {
+      background: linear-gradient(135deg, #FF9800, #f57c00);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      width: 100%;
+      transition: all 0.3s ease;
+    }
+
+    .btn-test:hover {
+      background: linear-gradient(135deg, #f57c00, #ef6c00);
+      transform: translateY(-1px);
+    }
+
+    .btn-test:disabled {
+      background: #666;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Toast notifications */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(51, 51, 51, 0.95);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      z-index: 1001;
+      opacity: 0;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-weight: 500;
+      max-width: 90%;
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-10px);
+    }
+
+    .toast.success {
+      background: rgba(76, 175, 80, 0.9);
+      border-color: rgba(76, 175, 80, 0.3);
+    }
+
+    .toast.error {
+      background: rgba(244, 67, 54, 0.9);
+      border-color: rgba(244, 67, 54, 0.3);
+    }
+
+    .toast.warning {
+      background: rgba(255, 152, 0, 0.9);
+      border-color: rgba(255, 152, 0, 0.3);
+    }
+
+    .toast.info {
+      background: rgba(33, 150, 243, 0.9);
+      border-color: rgba(33, 150, 243, 0.3);
+    }
+
+    /* Media Queries */
+    
+    /* Mobile First - Smartphones */
+    @media (max-width: 480px) {
+      .main-container {
+        padding: 40px 15px;
+      }
+
+      .nav-wrapper {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        padding: 20px 15px;
+        margin-bottom: 40px;
+      }
+
+      nav {
+        justify-content: center;
+        gap: 12px;
+      }
+
+      nav a {
+        font-size: 0.9rem;
+      }
+
+      .main-content {
+        margin-bottom: 40px;
+        padding: 0 10px;
+      }
+
+      .buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .buttons a {
+        width: 100%;
+        max-width: 280px;
+        padding: 12px 20px;
+        min-width: auto;
+      }
+
+      .image-section {
+        padding: 0 15px;
+        margin-bottom: 40px;
+      }
+
+      .image-background {
+        top: 5px;
+        left: 5px;
+        right: 5px;
+        bottom: 5px;
+      }
+
+      .section-container {
+        padding: 30px 15px;
+      }
+
+      .section-container p {
+        text-align: center;
+        padding: 0 10px;
+      }
+
+      .divider {
+        margin: 30px 0;
+      }
+
+      .aba-usuario {
+        left: auto;
+        right: 0;
+        transform: none;
+        width: 200px;
+      }
+
+      /* Notificações em mobile */
+      .notification-controls {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin: 10px;
+        width: calc(100% - 20px);
+      }
+    }
+
+    /* Tablets Portrait */
+    @media (min-width: 481px) and (max-width: 768px) {
+      .nav-wrapper {
+        flex-direction: column;
+        gap: 20px;
+        padding: 20px;
+        margin-bottom: 60px;
+      }
+
+      .main-content {
+        margin-bottom: 60px;
+      }
+
+      .buttons a {
+        min-width: 180px;
+      }
+
+      .section-container {
+        padding: 35px 20px;
+      }
+
+      .notification-controls {
+        top: 15px;
+        right: 15px;
+        min-width: 180px;
+      }
+    }
+
+    /* Tablets Landscape */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .nav-wrapper {
+        padding: 20px 30px;
+      }
+
+      .section-container {
+        padding: 40px 30px;
+      }
+    }
+
+    /* Desktop */
+    @media (min-width: 1025px) {
+      .section-container {
+        padding: 50px 40px;
+      }
+    }
+
+    /* Ajustes para orientação landscape em mobile */
+    @media (max-height: 500px) and (orientation: landscape) {
+      .main-container {
+        padding: 20px 15px;
+      }
+
+      .nav-wrapper {
+        margin-bottom: 30px;
+        padding: 15px;
+      }
+
+      .main-content {
+        margin-bottom: 30px;
+      }
+
+      h2 {
+        font-size: 1.8rem;
+      }
+
+      .notification-controls {
+        top: 10px;
+        right: 10px;
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <!-- Navegação -->
+    <div class="nav-wrapper">
+      <div class="logo"><img src="favicon.ico" width="12%" height="12%"><span>U.M.C.A.D</span></div>
+      <nav>
+        <a href="#quem-nos-somos">Sobre-nos</a>
+        <a href="#saibamais">Saiba mais</a>
+        <a href="register.html">Registrar-se</a>
+        <a href="login.html">Login</a>
+      </nav>
+    </div>
+
+    <!-- Controles de notificação (aparece apenas quando logado) -->
+    <div class="notification-controls" id="notification-controls">
+      <button id="notification-toggle" class="btn-notification">
+        🔕 Ativar Notificações
+      </button>
+      <div id="notification-status" class="notification-status">
+        Carregando...
+      </div>
+      <button id="test-notification" class="btn-test" onclick="testNotification()">
+        🧪 Testar Notificação
+      </button>
+    </div>
+
+    <!-- Conteúdo principal -->
+    <section class="main-content">
+      <small></small>
+      <h2>Um dispositivo para coletar todas as informações do seu campo sem você precisar sair do conforto de casa</h2>
+      <p>Visualize as informações de seu campo sem precisar baixar nada, e sem sair do conforto de sua casa.</p>
+      <div class="buttons">
+        <a href="/dados" class="btn-download" style="display: none;">📡 Acesse aqui os dados de seu campo</a>
+        <a href="https://github.com/MiguelAugutoRamos/Site-U.M.C.A.D" class="btn-github">Veja o Código no GitHub</a>
+       <a href="shop.html" class="btn-github">Compre o Seu</a>
+      </div>
+    </section>
+
+    <!-- Seção de imagem -->
+    <section class="image-section">
+      <div class="image-container">
+        <div class="image-background"></div>
+        <img src="imagens/foto projeto.png" alt="Imagem do projeto U.M.C.A.D" class="featured-image" />
+      </div>
+    </section>
+
+    <!-- Fundo da seção -->
+    <div class="background-section">
+      <!-- Separador -->
+      <div class="divider"></div>
+
+      <!-- Seção Quem somos -->
+      <section class="section-container" id="quem-nos-somos">
+        <h1>Quem nós somos?</h1>
+        <p><strong>
+          Somos os idealizadores do projeto U.M.C.A.D., unidos pela vontade de inovar e criar soluções práticas para o dia a dia.<br><br>
+          Cada integrante teve um papel essencial na construção do projeto:<br>
+          • Marcos Vinícius foi o cérebro por trás da programação dos dispositivos, garantindo que a parte técnica funcionasse com precisão.<br>
+          • Miguel Augusto cuidou do site com dedicação, desenvolvendo tanto sua estrutura quanto o design visual, pensando na melhor experiência para o usuário.<br>
+          • Júlio César assumiu a função de coordenador do grupo e também contribuiu diretamente na montagem e no funcionamento da parte eletrônica.<br>
+          • Andrey Aparecido teve papel fundamental nas apresentações do projeto e no suporte à gestão, ajudando a manter tudo organizado e bem representado.<br><br>
+          Juntos, fazemos nossas habilidades se transformarem em realidade.
+        </strong></p>
+      </section>
+
+      <!-- Separador -->
+      <div class="divider"></div>
+
+      <!-- Seção O que é -->
+      <section class="section-container" id="saibamais">
+        <h1>O que é o U.M.C.A.D.?</h1>
+        <p><strong>
+          O projeto U.M.C.A.D. foi desenvolvido com o objetivo de facilitar a comunicação entre o meio rural e o meio urbano por meio de tecnologia acessível e eficiente.
+          Utilizando um transmissor compacto e de fácil manuseio, é possível obter dados importantes do ambiente em tempo real. Ao posicionar o dispositivo em um local desejado, ele realiza medições como:<br>
+          • presença de gases que podem causar queimadas ou prejudicar plantas e seres humanos,<br>
+          • detecção de chuva,<br>
+          • umidade do ar e do solo,<br>
+          • além da temperatura local.<br><br>
+          Essas informações podem ser consultadas diretamente no local ou enviadas automaticamente para um receptor com alcance de até 1 km de distância. Todos os dados coletados são reunidos em uma única plataforma: um site intuitivo, que pode ser acessado de qualquer lugar, facilitando o monitoramento remoto.<br><br>
+          U.M.C.A.D. é a união entre tecnologia, praticidade e conectividade para melhorar o cuidado com o campo, mesmo à distância.
+        </strong></p>
+      </section>
+    </div>
+  </div>
+
+  <!-- Script para notificações push -->
+  <script src="push-frontend.js"></script>
+
+  <script>
+    // ==================== SISTEMA DE TOAST NOTIFICATIONS ====================
+    
+    function showToast(message, type = 'info') {
+      // Remover toast existente
+      const existingToast = document.querySelector('.toast');
+      if (existingToast) {
+        existingToast.remove();
+      }
+
+      // Criar novo toast
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+
+      // Mostrar toast
+      setTimeout(() => toast.classList.add('show'), 100);
+
+      // Remover toast após 4 segundos
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    // Disponibilizar globalmente
+    window.showToast = showToast;
+
+    // ==================== INTEGRAÇÃO COM NOTIFICAÇÕES PUSH ====================
+    
+    // Função para testar notificação
+    function testNotification() {
+      if (window.pushNotificationClient && window.pushNotificationClient.isUserSubscribed()) {
+        window.pushNotificationClient.testNotification();
+      } else {
+        showToast('Ative as notificações primeiro!', 'warning');
+      }
+    }
+
+    // Disponibilizar globalmente
+    window.testNotification = testNotification;
+
+    // ==================== SISTEMA DE LOGIN COM JWT ====================
+  // ao receber resposta do /login que retorna { token: '...' }
+  async function onLoginSubmit(e) {
+    e.preventDefault();
+    const res = await fetch('/login', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password }) });
+    const data = await res.json();
+    if (res.ok && data.token) {
+      localStorage.setItem('jwt', data.token); // <-- salva token
+      // redirecionar/atualizar UI
+    } else {
+      // tratar erro
+    }
+  }
+
+    // ==================== INTEGRAÇÃO COM SISTEMA DE LOGIN ====================
+    
+    // Cria o botão ⚙️ Configuração para inserir no dropdown
+    function criarBotaoConfiguracao() {
+      const btn = document.createElement('button');
+      btn.textContent = '⚙️ Configuração';
+      Object.assign(btn.style, {
+        display: 'block',
+        width: '100%',
+        textAlign: 'center',
+        padding: '6px 10px',
+        backgroundColor: 'transparent',
+        color: '#c3faff',
+        fontWeight: 'bold',
+        border: 'none',
+        borderRadius: '6px',
+        marginBottom: '6px',
+        cursor: 'pointer',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        boxSizing: 'border-box'
+      });
+    
+      btn.onmouseenter = () => btn.style.textDecoration = 'underline';
+      btn.onmouseleave = () => btn.style.textDecoration = 'none';
+    
+      btn.onclick = () => {
+        window.location.href = '/config'; // Redireciona para config.html
+      };
+    
+      return btn;
+    }
+
+    // Verifica sessão e monta dropdown de usuário
+    async function verificarLogin() {
+      const loginLink = document.querySelector('a[href="login.html"]');
+      const registerLink = document.querySelector('a[href="register.html"]');
+      const botaoDados = document.querySelector('.btn-download');
+      const notificationControls = document.getElementById('notification-controls');
+      const nav = document.querySelector('nav');
+
+      try {
+        const res = await fetch('/usuario-logado', { credentials: 'include' });
+        const data = await res.json();
+
+        if (data.logado) {
+          // Esconde links de login/registro
+          if (loginLink) loginLink.remove();
+          if (registerLink) registerLink.remove();
+          // Mostra botão de dados
+          if (botaoDados) botaoDados.style.display = 'inline-block';
+          // Mostra controles de notificação
+          if (notificationControls) notificationControls.classList.add('show');
+
+          // Cria elemento pai
+          const userWrap = document.createElement('div');
+          userWrap.classList.add('usuario-logado');
+
+          // Label com e-mail
+          const lbl = document.createElement('span');
+          lbl.textContent = `${data.email}`;
+          Object.assign(lbl.style, { fontWeight: 'bold', color: '#7edfff' });
+
+          // Dropdown oculto
+          const aba = document.createElement('div');
+          aba.classList.add('aba-usuario');
+
+          // 📎 Copiar Token direto
+          const copiarBtn = document.createElement('button');
+          copiarBtn.textContent = '📎 Copiar Token';
+          Object.assign(copiarBtn.style, {
+            display: 'block',
+            width: '100%',
+            textAlign: 'center',
+            padding: '6px 10px',
+            backgroundColor: 'transparent',
+            color: '#FFD700',
+            fontWeight: 'bold',
+            border: 'none',
+            borderRadius: '6px',
+            marginBottom: '6px',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            boxSizing: 'border-box'
+          });
+          
+          copiarBtn.onclick = async () => {
+            try {
+              const r = await fetch('/token-logado', { credentials: 'include' });
+              const { token } = await r.json();
+              const input = document.createElement('input');
+              input.value = token;
+              document.body.appendChild(input);
+              input.select();
+              document.execCommand('copy');
+              input.remove();
+              showToast('✅ Token copiado!', 'success');
+            } catch {
+              showToast('❌ Erro ao copiar token', 'error');
+            }
+          };
+          aba.appendChild(copiarBtn);
+
+          // ⚙️ Configuração
+          aba.appendChild(criarBotaoConfiguracao());
+
+          // 🔔 Configurar Notificações
+          const notifBtn = document.createElement('button');
+          notifBtn.textContent = '🔔 Notificações';
+          Object.assign(notifBtn.style, {
+            display: 'block',
+            width: '100%',
+            textAlign: 'center',
+            padding: '6px 10px',
+            backgroundColor: 'transparent',
+            color: '#29b6f6',
+            fontWeight: 'bold',
+            border: 'none',
+            borderRadius: '6px',
+            marginBottom: '6px',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            boxSizing: 'border-box'
+          });
+          
+          notifBtn.onmouseenter = () => notifBtn.style.textDecoration = 'underline';
+          notifBtn.onmouseleave = () => notifBtn.style.textDecoration = 'none';
+          
+          notifBtn.onclick = () => {
+            if (window.pushNotificationClient) {
+              window.pushNotificationClient.toggleNotifications();
+            } else {
+              showToast('Sistema de notificações não carregado', 'warning');
+            }
+          };
+          aba.appendChild(notifBtn);
+
+          // 🔴 Sair da conta
+          const btnOut = document.createElement('button');
+          btnOut.textContent = '🔴 Sair da conta';
+          Object.assign(btnOut.style, {
+            display: 'block',
+            width: '100%',
+            textAlign: 'center',
+            padding: '6px 10px',
+            backgroundColor: 'transparent',
+            color: '#ff5555',
+            fontWeight: 'bold',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            boxSizing: 'border-box'
+          });
+          
+          btnOut.onclick = () => {
+            fetch('/logout', { method: 'POST' })
+              .then(() => {
+                // Desinscrever das notificações ao fazer logout
+                if (window.pushNotificationClient && window.pushNotificationClient.isUserSubscribed()) {
+                  window.pushNotificationClient.unsubscribe();
+                }
+                window.location.href = '/login.html';
+              })
+              .catch(() => showToast('Erro ao sair da conta', 'error'));
+          };
+          aba.appendChild(btnOut);
+
+          // Monta no DOM
+          userWrap.appendChild(lbl);
+          userWrap.appendChild(aba);
+          nav.appendChild(userWrap);
+
+          // Hover para mostrar e esconder a aba
+          let hideTimeout;
+          userWrap.addEventListener('mouseenter', () => {
+            userWrap.classList.add('ativo');
+            clearTimeout(hideTimeout);
+          });
+          userWrap.addEventListener('mouseleave', () => {
+            hideTimeout = setTimeout(() => userWrap.classList.remove('ativo'), 250);
+          });
+
+          // Atualizar token de autenticação para notificações
+          if (window.pushNotificationClient) {
+            // O token será obtido automaticamente pelo sistema de notificações
+            console.log('✅ Usuário logado, sistema de notificações disponível');
+          }
+
+          // Disparar evento personalizado para notificar outros sistemas
+          document.dispatchEvent(new CustomEvent('loginStatusChanged', {
+            detail: { isLoggedIn: true, email: data.email }
+          }));
+
+        } else {
+          // Usuário não logado - esconde botão de dados e notificações
+          if (botaoDados) botaoDados.style.display = 'none';
+          if (notificationControls) notificationControls.classList.remove('show');
+
+          // Disparar evento personalizado
+          document.dispatchEvent(new CustomEvent('loginStatusChanged', {
+            detail: { isLoggedIn: false }
+          }));
+        }
+      } catch (err) {
+        console.error('Erro ao verificar login:', err);
+        // Em caso de erro, esconde o botão de dados e notificações por segurança
+        if (botaoDados) botaoDados.style.display = 'none';
+        if (notificationControls) notificationControls.classList.remove('show');
+      }
+    }
+
+    // ==================== INTEGRAÇÃO COM DADOS DOS SENSORES ====================
+    
+    // Função para processar dados de sensores recebidos via WebSocket
+    function onSensorDataReceived(data) {
+      console.log('📊 Dados de sensores recebidos:', data);
+      
+      // Mostrar notificação local se valores estão críticos
+      let alertas = [];
+      
+      if (data.temp > 40) {
+        alertas.push(`🌡️ Temperatura alta: ${data.temp}°C`);
+      }
+      if (data.temp < 5) {
+        alertas.push(`🧊 Temperatura baixa: ${data.temp}°C`);
+      }
+      if (data.gasInflamavel > 50) {
+        alertas.push(`🔥 Gás inflamável detectado: ${data.gasInflamavel}%`);
+      }
+      if (data.gasToxico > 50) {
+        alertas.push(`☠️ Gás tóxico detectado: ${data.gasToxico}%`);
+      }
+      if (data.estaChovendo === 1) {
+        alertas.push('🌧️ Chuva detectada');
+      }
+
+      if (alertas.length > 0) {
+        showToast(`⚠️ ${alertas.join(' | ')}`, 'warning');
+      }
+    }
+
+    // Disponibilizar globalmente
+    window.onSensorDataReceived = onSensorDataReceived;
+
+    // ==================== INICIALIZAÇÃO ====================
+    
+    // Smooth scroll para links de navegação
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Verificação inicial de suporte a notificações
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      console.warn('⚠️ Notificações push não são suportadas neste navegador');
+      
+      // Esconder controles de notificação se não há suporte
+      const controls = document.getElementById('notification-controls');
+      if (controls) {
+        controls.innerHTML = '<div class="notification-status status-error">Notificações não suportadas neste navegador</div>';
+      }
+    }
+
+    // Executa verificação de login quando a página carrega
+    window.onload = verificarLogin;
+
+    // Escutar mudanças no status de login
+    document.addEventListener('loginStatusChanged', function(event) {
+      const { isLoggedIn } = event.detail;
+      
+      if (isLoggedIn) {
+        showToast('✅ Login realizado! Notificações disponíveis.', 'success');
+      } else {
+        showToast('ℹ️ Logout realizado. Notificações desabilitadas.', 'info');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>📋 Histórico de Leituras</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 20px;
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 1.8rem;
+    }
+
+    .table-container {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      padding-bottom: 80px; /* espaço para footer */
+    }
+
+    .table-scroll {
+      height: 100%;
+      overflow-x: auto;
+      overflow-y: auto;
+      padding: 0 20px;
+    }
+
+    table {
+      border-collapse: collapse;
+      background-color: #111;
+      min-width: 80%;
+      border-bottom-left-radius: 15px;
+      border-bottom-right-radius: 15px;
+      zoom: 1;
+      transition: zoom 0.2s ease;
+      margin: 0 auto;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #333;
+      white-space: nowrap;
+      font-size: 0.9rem;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      background-color: #29b6f6;
+      color: #000;
+      cursor: pointer;
+      z-index: 2;
+    
+    }
+    thead th:hover {
+      background-color: #1e90ff;
+    }
+    tr:hover {
+      background-color: #222;
+    
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 60px;
+      background: #203a43;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 0 20px;
+      z-index: 10;
+    }
+
+    .footer button {
+      padding: 10px 16px;
+      font-size: 1rem;
+      font-weight: bold;
+      background: #29b6f6;
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .footer button:hover {
+      background-color: #1e90ff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>📋 Histórico de Leituras</h1>
+  </div>
+
+  <div class="table-container">
+    <div class="table-scroll">
+      <table id="tabelaLeituras">
+        <thead>
+          <tr>
+            <th data-order="desc">Horário</th>
+            <th data-order="desc">Temp</th>
+            <th data-order="desc">Umid. Ar</th>
+            <th data-order="desc">Umid. Solo</th>
+            <th data-order="desc">Gás Inflamável</th>
+            <th data-order="desc">Gás Tóxico</th>
+            <th data-order="desc">Chuva</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="7">🔄 Carregando dados...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer">
+    <button id="zoomOut">➖ Zoom </button>
+    <button id="btnVoltar">🔙 Voltar</button>
+    <button id="zoomIn">➕ Zoom +</button>
+    <button id="exportCsv">📁 CSV</button>
+  </div>
+
+<script>
+  const tabela     = document.getElementById('tabelaLeituras');
+  const zoomInBtn  = document.getElementById('zoomIn');
+  const zoomOutBtn = document.getElementById('zoomOut');
+  const voltarBtn  = document.getElementById('btnVoltar');
+  const exportBtn  = document.getElementById('exportCsv');
+
+  let zoomLevel = 1;
+  let historico = [];
+
+  function zoomIn() {
+    zoomLevel = Math.min(2, zoomLevel + 0.1);
+    tabela.style.zoom = zoomLevel;
+  }
+  function zoomOut() {
+    zoomLevel = Math.max(0.5, zoomLevel - 0.1);
+    tabela.style.zoom = zoomLevel;
+  }
+  function voltar() {
+    window.history.back();
+  }
+
+  async function exportCSV() {
+    const res = await fetch('/historico', { credentials: 'include' });
+    if (!res.ok) return alert('⚠️ Falha ao buscar dados.');
+    const dados = await res.json();
+    if (!dados.length) return alert('📭 Nenhum dado para exportar.');
+
+    const header = [
+      'Horário','Temp (°C)','Umid. Ar (%)','Umid. Solo (%)',
+      'Gás Inflamável (%)','Gás Tóxico (%)','Chuva'
+    ];
+    const rows = dados.map(l => [
+      new Date(l.timestamp).toLocaleString(),
+      l.temp,
+      l.umidAr,
+      l.umidSolo,
+      l.gasInflamavel,
+      l.gasToxico,
+      (l.estaChovendo === 1 || l.estaChovendo === true) ? 'Sim' : 'Não'
+    ]);
+
+    const csv = [header, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'historico.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  async function carregarHistorico() {
+    const res = await fetch('/historico', { credentials: 'include' });
+    if (!res.ok) {
+      tabela.tBodies[0].innerHTML =
+        `<tr><td colspan="7">⚠️ Erro ao carregar dados.</td></tr>`;
+      return;
+    }
+    historico = await res.json();
+    renderizarTabela();
+  }
+
+  function renderizarTabela() {
+    const tbody = tabela.tBodies[0];
+    tbody.innerHTML = '';
+    if (!historico.length) {
+      tbody.innerHTML = `<tr><td colspan="7">📭 Sem registros.</td></tr>`;
+      return;
+    }
+    historico.forEach(l => {
+      const chove = (l.estaChovendo === 1 || l.estaChovendo === true);
+      const dt = new Date(l.timestamp).toLocaleString();
+      tbody.insertAdjacentHTML('beforeend', `
+        <tr>
+          <td>${dt}</td>
+          <td>${l.temp}°C</td>
+          <td>${l.umidAr}%</td>
+          <td>${l.umidSolo}%</td>
+          <td>${l.gasInflamavel}%</td>
+          <td>${l.gasToxico}%</td>
+          <td>${chove ? 'SIM🌧' : 'NÃO☀️'}</td>
+        </tr>
+      `);
+    });
+  }
+
+  // ordenação com ícones 🔼🔽
+  document.querySelectorAll('#tabelaLeituras thead th')
+    .forEach((th, idx) => {
+      th.addEventListener('click', () => {
+        const novaOrdem = th.dataset.order === 'asc' ? 'desc' : 'asc';
+        th.dataset.order = novaOrdem;
+
+        // limpar ícones anteriores
+        document.querySelectorAll('#tabelaLeituras thead th')
+          .forEach(el => {
+            el.textContent = el.textContent.replace(' 🔼', '').replace(' 🔽', '');
+          });
+
+        // adicionar ícone atual
+        const baseTexto = th.textContent.replace(' 🔼', '').replace(' 🔽', '');
+        th.textContent = baseTexto + (novaOrdem === 'asc' ? ' 🔼' : ' 🔽');
+
+        const rows = Array.from(tabela.tBodies[0].rows);
+        rows.sort((a, b) => {
+          let va = a.cells[idx].innerText;
+          let vb = b.cells[idx].innerText;
+
+          if (idx === 0) {
+            va = new Date(va); vb = new Date(vb);
+          } else if (idx === 6) {
+            va = (va.includes('SIM')) ? 1 : 0;
+            vb = (vb.includes('SIM')) ? 1 : 0;
+          } else {
+            va = parseFloat(va); vb = parseFloat(vb);
+          }
+
+          return (va > vb ? 1 : -1) * (novaOrdem === 'asc' ? 1 : -1);
+        });
+
+        const tbody = tabela.tBodies[0];
+        rows.forEach(r => tbody.appendChild(r));
+      });
+    });
+
+  zoomInBtn.addEventListener('click', zoomIn);
+  zoomOutBtn.addEventListener('click', zoomOut);
+  voltarBtn.addEventListener('click', voltar);
+  exportBtn.addEventListener('click', exportCSV);
+  window.addEventListener('DOMContentLoaded', carregarHistorico);
+</script>
+
+
+</body>
+</html>
+
