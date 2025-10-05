@@ -172,8 +172,9 @@ class PushNotificationManager {
 
       // Verificar horário silencioso
       if (this.isQuietHours(settings)) {
-        console.log(`🔇 Horário silencioso para usuário ${userEmail}`);
-        return { success: false, message: 'Horário silencioso' };
+        //console.log(`🔇 Horário silencioso para usuário ${userEmail}`);
+        //return { success: false, message: 'Horário silencioso' };
+        return false;
       }
 
       const results = [];

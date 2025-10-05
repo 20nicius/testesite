@@ -127,6 +127,11 @@ function authenticateToken(req, res, next) {
       const userData = dbGet('SELECT * FROM users WHERE email = ?', [email]);
       if (!userData) return res.status(404).json({ error: 'Usuário não encontrado' });
 
+      // Adicione aqui:
+      console.log('JWT recebido:', token);
+      console.log('Payload decodificado:', payload);
+      console.log('Usuário autenticado:', userData);
+
       req.user = userData;
       return next();
     } catch (err) {
@@ -359,6 +364,63 @@ app.post('/api/test-notification', authenticateToken, async (req, res) => {
   }
 });
 
+// ==================== ROTAS DE CONFIGURAÇÃO DO USUÁRIO ====================
+
+// Endpoint para buscar configurações do usuário
+app.get("/api/user-settings", authenticateToken, (req, res) => {
+  try {
+    const userEmail = req.user.email;
+    const settingsRows = dbAll(
+      "SELECT chave, valor FROM config WHERE usuario_email = ?",
+      [userEmail]
+    );
+
+    const settings = {};
+    settingsRows.forEach((row) => {
+      settings[row.chave] = row.valor;
+    });
+
+    // Adicionar configurações padrão se não existirem
+    settings.enableNotifications = settings.enableNotifications || "false";
+    settings.dailyReports = settings.dailyReports || "false";
+    settings.humidityAlertsEnabled = settings.humidityAlertsEnabled || "false";
+    settings.humidityMin = settings.humidityMin || "30";
+    settings.humidityMax = settings.humidityMax || "80";
+    settings.soilHumidityMin = settings.soilHumidityMin || "20";
+    settings.soilHumidityMax = settings.soilHumidityMax || "90";
+    settings.temperatureAlertsEnabled = settings.temperatureAlertsEnabled || "false";
+    settings.temperatureMin = settings.temperatureMin || "10";
+    settings.temperatureMax = settings.temperatureMax || "35";
+
+    res.json(settings);
+  } catch (error) {
+    console.error("Erro ao buscar configurações do usuário:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+// Endpoint para salvar configurações do usuário
+app.post("/api/user-settings", authenticateToken, (req, res) => {
+  try {
+    const userEmail = req.user.email;
+    const settings = req.body;
+
+    db.transaction(() => {
+      for (const key in settings) {
+        dbRun(
+          "INSERT OR REPLACE INTO config (usuario_email, chave, valor) VALUES (?, ?, ?)",
+          [userEmail, key, String(settings[key])]
+        );
+      }
+    })();
+
+    res.json({ success: true, message: "Configurações salvas com sucesso!" });
+  } catch (error) {
+    console.error("Erro ao salvar configurações do usuário:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
 // Endpoint para configurações de notificação
 app.get('/api/notification-settings', authenticateToken, (req, res) => {
   try {
@@ -385,6 +447,26 @@ app.post('/api/notification-settings', authenticateToken, (req, res) => {
   } catch (error) {
     console.error('Erro ao atualizar configurações:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// ==================== ROTAS DE GERENCIAMENTO DE CONTA ====================
+
+// Endpoint para regenerar token
+app.post("/api/regenerate-token", authenticateToken, (req, res) => {
+  try {
+    const userEmail = req.user.email;
+    const newToken = require("crypto").randomBytes(32).toString("hex");
+
+    dbRun("UPDATE users SET token = ? WHERE email = ?", [newToken, userEmail]);
+
+    // Gerar um novo JWT para o usuário
+    const newJwtToken = jwt.sign({ id: req.user.id, email: userEmail }, JWT_SECRET, { expiresIn: "1h" });
+
+    res.json({ success: true, message: "Token regenerado com sucesso!", token: newJwtToken });
+  } catch (error) {
+    console.error("Erro ao regenerar token:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
   }
 });
 

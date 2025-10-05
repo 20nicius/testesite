@@ -231,7 +231,7 @@ router.post('/configurar-delay', autenticar, async (req, res) => {
   }
 });
 
-router.post('/limpar-historico', async (req, res) => {
+router.post('/api/limpar-historico', async (req, res) => {
   try {
     const { token } = req.body; // ou req.session.email, se usar sessão
 
