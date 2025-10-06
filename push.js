@@ -71,18 +71,49 @@ class PushNotificationManager {
       // Tabela para configurações de notificação do usuário
       this.db.exec(`
         CREATE TABLE IF NOT EXISTS user_notification_settings (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          user_email TEXT NOT NULL UNIQUE,
-          push_enabled BOOLEAN DEFAULT 1,
-          critical_alerts BOOLEAN DEFAULT 1,
-          sensor_alerts BOOLEAN DEFAULT 1,
-          daily_reports BOOLEAN DEFAULT 0,
-          maintenance_alerts BOOLEAN DEFAULT 1,
-          quiet_hours_start TIME DEFAULT '22:00',
-          quiet_hours_end TIME DEFAULT '07:00',
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE CASCADE
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_email TEXT NOT NULL UNIQUE,
+        
+        -- Configurações gerais de notificações
+        push_enabled BOOLEAN NOT NULL DEFAULT 1,
+        daily_reports BOOLEAN NOT NULL DEFAULT 0,
+        
+        -- Alertas específicos
+        humidity_alerts_enabled BOOLEAN NOT NULL DEFAULT 1,
+        humidity_min INTEGER NOT NULL DEFAULT 0,
+        humidity_max INTEGER NOT NULL DEFAULT 100,
+        
+        soil_humidity_alerts_enabled BOOLEAN NOT NULL DEFAULT 1,
+        soil_humidity_min INTEGER NOT NULL DEFAULT 0,
+        soil_humidity_max INTEGER NOT NULL DEFAULT 100,
+        
+        temperature_alerts_enabled BOOLEAN NOT NULL DEFAULT 1,
+        temperature_min INTEGER NOT NULL DEFAULT 0,
+        temperature_max INTEGER NOT NULL DEFAULT 50,
+        
+        rain_alerts_enabled BOOLEAN NOT NULL DEFAULT 1,
+        rain_start_alert BOOLEAN NOT NULL DEFAULT 1,
+        rain_stop_alert BOOLEAN NOT NULL DEFAULT 1,
+        no_rain_days INTEGER NOT NULL DEFAULT 7,
+        
+        gas_alerts_enabled BOOLEAN NOT NULL DEFAULT 1,
+        inflammable_gas_threshold INTEGER NOT NULL DEFAULT 20,
+        toxic_gas_threshold INTEGER NOT NULL DEFAULT 15,
+        critical_gas_alert BOOLEAN NOT NULL DEFAULT 1,
+        
+        -- Configurações extras
+        quiet_hours_start TIME,
+        quiet_hours_end TIME,
+        
+        -- Ícones / personalização de notificação
+        icon_url TEXT,
+        badge_url TEXT,
+        
+        -- Controle de data e hora
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        
+        FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE CASCADE
         )
       `);
 

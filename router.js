@@ -7,6 +7,7 @@ const path       = require('path');
 const WebSocket  = require('ws');
 const jwt        = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'seu-jwt-secret-aqui';
+const db = require("./db");
 
 function gerarTokenUnico() {
   return crypto.randomBytes(24).toString('hex');
@@ -125,6 +126,105 @@ module.exports = function createRouter(deps) {
   } catch (err) {
     console.error(err);
     res.status(500).send('Erro ao enviar e-mail.');
+  }
+});
+
+
+// ==================== ROTA DE CONFIGURAÇÃO DE NOTIFICAÇÕES ====================
+// Rota para obter configurações do usuário
+router.get("/api/notification-settings", async (req, res) => {
+  try {
+    const email = req.user?.email || req.query.email; // ajuste conforme sua autenticação
+    const settings = await db.get("SELECT * FROM user_notification_settings WHERE user_email = ?", [email]);
+
+    if (!settings) {
+      return res.status(404).json({ error: "Configurações não encontradas" });
+    }
+
+    res.json(settings);
+  } catch (error) {
+    console.error("Erro ao obter configurações:", error);
+    res.status(500).json({ error: "Erro ao carregar configurações" });
+  }
+});
+
+// Rota para salvar/atualizar configurações
+router.post("/api/notification-settings", async (req, res) => {
+  try {
+    const settings = req.body;
+    const email = settings.user_email || "teste@umcad.com"; // ajuste conforme login
+
+    const existing = await db.get("SELECT * FROM user_notification_settings WHERE user_email = ?", [email]);
+
+    if (existing) {
+      await db.run(
+        `UPDATE user_notification_settings
+         SET push_enabled = ?, daily_reports = ?, humidity_alerts_enabled = ?,
+             humidity_min = ?, humidity_max = ?, soil_humidity_min = ?, soil_humidity_max = ?,
+             temperature_alerts_enabled = ?, temperature_min = ?, temperature_max = ?,
+             rain_alerts_enabled = ?, rain_start_alert = ?, rain_stop_alert = ?, no_rain_days = ?,
+             gas_alerts_enabled = ?, inflammable_gas_threshold = ?, toxic_gas_threshold = ?, critical_gas_alert = ?,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE user_email = ?`,
+        [
+          settings.enableNotifications,
+          settings.dailyReports,
+          settings.humidityAlertsEnabled,
+          settings.humidityMin,
+          settings.humidityMax,
+          settings.soilHumidityMin,
+          settings.soilHumidityMax,
+          settings.temperatureAlertsEnabled,
+          settings.temperatureMin,
+          settings.temperatureMax,
+          settings.rainAlertsEnabled,
+          settings.rainStartAlert,
+          settings.rainStopAlert,
+          settings.noRainDays,
+          settings.gasAlertsEnabled,
+          settings.inflammableGasThreshold,
+          settings.toxicGasThreshold,
+          settings.criticalGasAlert,
+          email
+        ]
+      );
+    } else {
+      await db.run(
+        `INSERT INTO user_notification_settings (
+           user_email, push_enabled, daily_reports, humidity_alerts_enabled,
+           humidity_min, humidity_max, soil_humidity_min, soil_humidity_max,
+           temperature_alerts_enabled, temperature_min, temperature_max,
+           rain_alerts_enabled, rain_start_alert, rain_stop_alert, no_rain_days,
+           gas_alerts_enabled, inflammable_gas_threshold, toxic_gas_threshold, critical_gas_alert
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          email,
+          settings.enableNotifications,
+          settings.dailyReports,
+          settings.humidityAlertsEnabled,
+          settings.humidityMin,
+          settings.humidityMax,
+          settings.soilHumidityMin,
+          settings.soilHumidityMax,
+          settings.temperatureAlertsEnabled,
+          settings.temperatureMin,
+          settings.temperatureMax,
+          settings.rainAlertsEnabled,
+          settings.rainStartAlert,
+          settings.rainStopAlert,
+          settings.noRainDays,
+          settings.gasAlertsEnabled,
+          settings.inflammableGasThreshold,
+          settings.toxicGasThreshold,
+          settings.criticalGasAlert
+        ]
+      );
+    }
+
+    res.json({ success: true, message: "Configurações salvas com sucesso!" });
+  } catch (error) {
+    console.error("Erro ao salvar configurações:", error);
+    res.status(500).json({ error: "Erro interno ao salvar configurações" });
   }
 });
 
