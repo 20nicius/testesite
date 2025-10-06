@@ -619,6 +619,14 @@
             document.getElementById("temperatureAlertsEnabled").checked = settings.temperatureAlertsEnabled === "true";
             document.getElementById("temperatureMin").value = settings.temperatureMin || 10;
             document.getElementById("temperatureMax").value = settings.temperatureMax || 35;
+            document.getElementById("rainAlertsEnabled").checked = settings.rainAlertsEnabled === "true";
+            document.getElementById("rainStartAlert").checked = settings.rainStartAlert === "true";
+            document.getElementById("rainStopAlert").checked = settings.rainStopAlert === "true";
+            document.getElementById("noRainDays").value = settings.noRainDays || 7;
+            document.getElementById("gasAlertsEnabled").checked = settings.gasAlertsEnabled === "true";
+            document.getElementById("inflammableGasThreshold").value = settings.inflammableGasThreshold || 20;
+            document.getElementById("toxicGasThreshold").value = settings.toxicGasThreshold || 15;
+            document.getElementById("criticalGasAlert").checked = settings.criticalGasAlert === "true";
 
             // Atualizar valores exibidos dos ranges
             updateRangeValue(humidityMin, humidityMinValue, "%");
@@ -627,6 +635,9 @@
             updateRangeValue(soilHumidityMax, soilHumidityMaxValue, "%");
             updateRangeValue(temperatureMin, temperatureMinValue, "°C");
             updateRangeValue(temperatureMax, temperatureMaxValue, "°C");
+            updateRangeValue(document.getElementById("noRainDays"), document.getElementById("noRainDaysValue"), " dias");
+            updateRangeValue(document.getElementById("inflammableGasThreshold"), document.getElementById("inflammableGasThresholdValue"), "%");
+            updateRangeValue(document.getElementById("toxicGasThreshold"), document.getElementById("toxicGasThresholdValue"), "%");
 
             showToast("Configurações carregadas com sucesso!", "success");
           } catch (error) {
@@ -655,6 +666,14 @@
             temperatureAlertsEnabled: document.getElementById("temperatureAlertsEnabled").checked,
             temperatureMin: document.getElementById("temperatureMin").value,
             temperatureMax: document.getElementById("temperatureMax").value,
+            rainAlertsEnabled: document.getElementById("rainAlertsEnabled").checked,
+            rainStartAlert: document.getElementById("rainStartAlert").checked,
+            rainStopAlert: document.getElementById("rainStopAlert").checked,
+            noRainDays: document.getElementById("noRainDays").value,
+            gasAlertsEnabled: document.getElementById("gasAlertsEnabled").checked,
+            inflammableGasThreshold: document.getElementById("inflammableGasThreshold").value,
+            toxicGasThreshold: document.getElementById("toxicGasThreshold").value,
+            criticalGasAlert: document.getElementById("criticalGasAlert").checked,
           };
 
           try {

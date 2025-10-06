@@ -10,7 +10,8 @@ const Database  = require('better-sqlite3');
 const { OAuth2Client } = require('google-auth-library');
 const nodemailer = require('nodemailer');
 const ngrok = require('@ngrok/ngrok');
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
 // Importar o módulo de Notificações Push
 const PushNotificationManager = require('./push');
