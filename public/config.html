@@ -200,8 +200,27 @@
           </div>
         </div>
 
-        <!-- Botões de ação do formulário -->
+        <!-- Seção de Configuração de Delay -->
         <div class="config-section">
+          <h2>⏱️ Intervalo de Salvamento de Dados</h2>
+          <p>Defina de quanto em quanto tempo os dados do sensor serão salvos no servidor.</p>
+        
+          <div class="form-group">
+            <label for="dataSaveDelay">Delay de salvamento (minutos)</label>
+            <div class="form-row">
+              <input type="range" id="dataSaveDelay" name="dataSaveDelay" min="10" max="60" value="15" class="form-control">
+              <span class="range-value" id="dataSaveDelayValue">15 minutos</span>
+            </div>
+            <small style="color: #b0b0b0;">O intervalo mínimo é de 10 minutos e o máximo é de 60 minutos.</small>
+          </div>
+        
+          <button type="button" id="saveDelayBtn" class="btn btn-primary">
+            💾 Aplicar Delay
+          </button>
+        </div>
+        
+                <!-- Botões de ação do formulário -->
+                <div class="config-section">
           <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
             <button type="submit" class="btn btn-primary">💾 Salvar Configurações</button>
             <button type="button" id="resetBtn" class="btn btn-secondary">🔄 Restaurar Padrões</button>
@@ -533,6 +552,38 @@
     }
 
     });
+
+    // Atualiza valor mostrado
+const delayInput = document.getElementById("dataSaveDelay");
+const delayValue = document.getElementById("dataSaveDelayValue");
+delayInput.addEventListener("input", () => {
+  delayValue.textContent = `${delayInput.value} minutos`;
+});
+
+// Salvar delay no servidor
+document.getElementById("saveDelayBtn").addEventListener("click", async () => {
+  const novoDelay = delayInput.value;
+
+  try {
+    const response = await fetch("/api/configurar-delay", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ novoDelay })
+    });
+
+    const text = await response.text();
+    if (response.ok) {
+      showToast(text, "success");
+    } else {
+      showToast("Erro ao configurar delay: " + text, "error");
+    }
+  } catch (err) {
+    console.error(err);
+    showToast("Erro de conexão ao configurar delay.", "error");
+  }
+});
+
   </script>
 </body>
 </html>

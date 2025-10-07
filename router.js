@@ -205,14 +205,14 @@ router.post('/regenerar-token', autenticar, async (req, res) => {
   }
 });
 
-router.post('/configurar-delay', autenticar, async (req, res) => {
+router.post('/api/configurar-delay', autenticar, async (req, res) => {
   try {
     let { novoDelay } = req.body;
 
     // Converte minutos para ms
     const delayMs = parseInt(novoDelay, 10) * 60000;
 
-    if (isNaN(delayMs) || delayMs < 300000) {
+    if (isNaN(delayMs) || delayMs < 300000 && delayMs > 3,6e+6) {
       return res.status(400).send('⏱️ Mínimo de 5 minutos obrigatório.');
     }
 

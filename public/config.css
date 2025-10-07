@@ -28,19 +28,30 @@
 
     /* Navegação responsiva */
     .nav-wrapper {
-      width: 100%;
-      max-width: 1100px;
-      background-color: rgb(17, 17, 17);
-      border: 1px solid rgba(255, 255, 255, 0.171);
-      border-radius: 18px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      padding: 16px 32px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 40px;
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 1100px;
+    background-color: rgb(17, 17, 17);
+    border: 1px solid rgba(255, 255, 255, 0.171);
+    border-radius: 18px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 16px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    margin-bottom: 0; /* retiramos o margin-bottom, já que ficará fixo */
     }
+   
+/*    para o conteúdo não ficar escondido atrás do menu fixo */
+    .main-container {
+      margin-top: 120px;
+    }
+
 
     .logo {
       display: flex;
