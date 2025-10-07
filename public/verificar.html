@@ -47,6 +47,14 @@
       font-weight: bold;
       margin-top: 10px;
     }
+    .toggle-password {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #888;
+    }
   </style>
 </head>
 <body>
@@ -57,7 +65,10 @@
     <button onclick="enviarCodigo()">📩 Enviar Código</button>
 
     <input type="text" id="codigo" placeholder="Código recebido" />
-    <input type="password" id="novaSenha" placeholder="Nova senha" />
+    <div style="position: relative;">
+      <input type="password" id="novaSenha" placeholder="Nova senha" />
+      <span class="toggle-password" onclick="togglePasswordVisibility(\'novaSenha\', this)">👁️</span>
+    </div>
 
     <button onclick="redefinir()">🔁 Redefinir Senha</button>
 
@@ -65,6 +76,17 @@
   </div>
 
   <script>
+    function togglePasswordVisibility(id, element) {
+      const input = document.getElementById(id);
+      if (input.type === 'password') {
+        input.type = 'text';
+        element.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        element.textContent = '👁️';
+      }
+    }
+
     async function enviarCodigo() {
       const email = document.getElementById('email').value;
       const msg = document.getElementById('mensagem');

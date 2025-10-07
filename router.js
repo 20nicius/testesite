@@ -99,7 +99,9 @@ module.exports = function createRouter(deps) {
       [email, hash, token]
     );
     req.session.email = email;
-    res.send('✅ Conta vinculada ao Google com sucesso!');
+    const user = await dbGet('SELECT id, email FROM users WHERE email = ?', [email]);
+    const jwtToken = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ success: true, message: '✅ Conta vinculada ao Google com sucesso!', token: jwtToken });
   } catch (err) {
     console.error(err);
     res.status(500).send('Erro ao vincular conta Google');
@@ -142,7 +144,9 @@ module.exports = function createRouter(deps) {
       'INSERT INTO users (email, password) VALUES (?, ?)',
       [email, hash]
     );
-    res.send('✅ Conta criada com sucesso!');
+    const user = await dbGet('SELECT id, email FROM users WHERE email = ?', [email]);
+    const jwtToken = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ success: true, message: '✅ Conta criada com sucesso!', token: jwtToken });
   } catch (err) {
     console.error(err);
     res.status(500).send('Erro ao salvar no banco');

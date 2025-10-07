@@ -40,6 +40,9 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 40px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
     .logo {
@@ -85,11 +88,17 @@
       -webkit-backdrop-filter: blur(10px);
       padding: 40px;
       margin-bottom: 40px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
     .config-header {
       text-align: center;
       margin-bottom: 40px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
     .config-header h1 {
@@ -108,6 +117,9 @@
     /* Seções de configuração */
     .config-section {
       margin-bottom: 40px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
       padding: 30px;
       background-color: rgba(255, 255, 255, 0.05);
       border-radius: 12px;
@@ -360,3 +372,14 @@
     .toast.warning {
       border-left-color: #ff9800;
     }
+
+
+
+
+.form-actions-center {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+

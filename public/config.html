@@ -200,6 +200,21 @@
           </div>
         </div>
 
+        <!-- Seção de Configuração de Delay -->
+        <div class="config-section">
+          <h2>⏱️ Delay de Registro</h2>
+          <p>Defina o intervalo mínimo entre os registros de dados dos sensores (10 minutos a 3 horas).</p>
+          
+          <div class="form-group">
+            <label for="delayConfig">Intervalo de registro</label>
+            <div class="form-row">
+              <input type="range" id="delayConfig" name="delayConfig" min="10" max="180" value="10" class="form-control">
+              <span class="range-value" id="delayConfigValue">10 minutos</span>
+            </div>
+            <small style="color: #b0b0b0;">Os dados dos sensores serão registrados a cada X minutos.</small>
+          </div>
+        </div>
+
         <!-- Botões de ação do formulário -->
         <div class="config-section">
           <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
@@ -261,7 +276,8 @@
       gasAlertsEnabled: true,
       inflammableGasThreshold: 20,
       toxicGasThreshold: 15,
-      criticalGasAlert: true
+      criticalGasAlert: true,
+      delayConfig: 10
     };
 
     // Função para mostrar toast
@@ -298,44 +314,58 @@
       document.getElementById('noRainDaysValue').textContent = noRainDays + (noRainDays == 1 ? ' dia' : ' dias');
       
       // Gases
-      document.getElementById('inflammableGasThresholdValue').textContent = document.getElementById('inflammableGasThreshold').value + '%';
-      document.getElementById('toxicGasThresholdValue').textContent = document.getElementById('toxicGasThreshold').value + '%';
+      document.getElementById(\'inflammableGasThresholdValue\').textContent = document.getElementById(\'inflammableGasThreshold\').value + \'%\';
+      document.getElementById(\'toxicGasThresholdValue\').textContent = document.getElementById(\'toxicGasThreshold\').value + \'%\';
+
+      // Delay de Registro
+      const delayConfig = document.getElementById(\'delayConfig\').value;
+      document.getElementById(\'delayConfigValue\').textContent = delayConfig + (delayConfig == 1 ? \' minuto\' : \' minutos\');
     }
 
     // Função para carregar configurações do servidor
     async function loadSettings() {
       try {
-        const response = await fetch('/api/notification-settings', {
-          method: 'GET',
-          credentials: 'include'
+        // Carregar configurações de notificação
+        const notificationResponse = await fetch(\"/api/notification-settings\", {
+          method: \"GET\",
+          credentials: \"include\"
         });
 
-        if (response.ok) {
-          const settings = await response.json();
-          
-          // Aplicar configurações carregadas
+        if (notificationResponse.ok) {
+          const settings = await notificationResponse.json();
           Object.keys(settings).forEach(key => {
             const element = document.getElementById(key);
             if (element) {
-              if (element.type === 'checkbox') {
+              if (element.type === \"checkbox\") {
                 element.checked = settings[key];
               } else {
                 element.value = settings[key];
               }
             }
           });
-          
-          updateRangeValues();
-          showToast('Configurações carregadas com sucesso!', 'success');
-        } else {
-          // Se não conseguir carregar, usar configurações padrão
-          applyDefaultSettings();
-          showToast('Usando configurações padrão', 'warning');
         }
+
+        // Carregar configuração de delay
+        const delayResponse = await fetch(\"/api/delay-config\", {
+          method: \"GET\",
+          credentials: \"include\"
+        });
+
+        if (delayResponse.ok) {
+          const delayData = await delayResponse.json();
+          const delayElement = document.getElementById(\"delayConfig\");
+          if (delayElement) {
+            delayElement.value = delayData.delayConfig;
+          }
+        }
+        
+        updateRangeValues();
+        showToast(\"Configurações carregadas com sucesso!\", \"success\");
+
       } catch (error) {
-        console.error('Erro ao carregar configurações:', error);
+        console.error(\"Erro ao carregar configurações:\", error);
         applyDefaultSettings();
-        showToast('Erro ao carregar configurações. Usando padrões.', 'error');
+        showToast(\"Erro ao carregar configurações. Usando padrões.\", \"error\");
       }
     }
 

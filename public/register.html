@@ -60,6 +60,14 @@
       text-align: center;
       font-weight: bold;
     }
+    .toggle-password {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #888;
+    }
   </style>
 </head>
 <body>
@@ -70,13 +78,27 @@
     <input type="email" id="email" placeholder="Seu e-mail" required />
     <button class="btn" onclick="enviarCodigo()">📨 Enviar Código</button>
     <input type="text" id="codigo" placeholder="Código recebido" />
-    <input type="password" id="senha" placeholder="Sua senha" />
+    <div style="position: relative;">
+      <input type="password" id="senha" placeholder="Sua senha" />
+      <span class="toggle-password" onclick="togglePasswordVisibility(\'senha\', this)">👁️</span>
+    </div>
     <button class="btn" onclick="registrar()">✅ Cadastrar</button>
 
     <div id="mensagem"></div>
   </div>
 
   <script>
+    function togglePasswordVisibility(id, element) {
+      const input = document.getElementById(id);
+      if (input.type === 'password') {
+        input.type = 'text';
+        element.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        element.textContent = '👁️';
+      }
+    }
+
     async function enviarCodigo() {
       const email = document.getElementById('email').value;
       const msg = document.getElementById('mensagem');
@@ -116,11 +138,15 @@
         body: JSON.stringify({ email, codigo, password: senha })
       });
 
-      const texto = await res.text();
+      const data = await res.json();
+      const texto = data.message;
       msg.textContent = texto;
       msg.style.color = res.ok ? 'green' : 'red';
 
-      if (res.ok) {
+      if (res.ok && data.token) {
+        localStorage.setItem('jwt', data.token);
+        setTimeout(() => window.location.href = '/', 2000);
+      } else if (res.ok) {
         setTimeout(() => window.location.href = '/login.html', 2000);
       }
     }
@@ -128,4 +154,3 @@
 
 </body>
 </html>
-

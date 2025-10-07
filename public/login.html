@@ -78,6 +78,14 @@
       justify-content: center;
       margin-top: 10px;
     }
+    .toggle-password {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #888;
+    }
   </style>
 </head>
 
@@ -88,7 +96,10 @@
       <h2>🔑 Login</h2>
       </div>
       <input type="email" id="email" placeholder="Seu e-mail" required />
-      <input type="password" id="password" placeholder="Sua senha" required />
+      <div style="position: relative;">
+        <input type="password" id="password" placeholder="Sua senha" required />
+        <span class="toggle-password" onclick="togglePasswordVisibility(\'password\', this)">👁️</span>
+      </div>
       <button type="submit">Entrar com E-mail</button>
       <p id="mensagem"></p>
     </form>
@@ -150,6 +161,17 @@
         mensagem.style.color = 'red';
       }
     });
+
+    function togglePasswordVisibility(id, element) {
+      const input = document.getElementById(id);
+      if (input.type === 'password') {
+        input.type = 'text';
+        element.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        element.textContent = '👁️';
+      }
+    }
 
     async function handleCredentialResponse(response) {
       mensagem.textContent = '';
@@ -224,14 +246,16 @@ function mostrarPopupSenha(emailGoogle) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: emailGoogle, password: senha })
         });
-        const msg = await res.text();
+        const data = await res.json();
+        const msg = data.message;
         const mensagem = document.getElementById('mensagem');
         mensagem.textContent = msg;
         mensagem.style.color = res.ok ? 'green' : 'red';
-        if (res.ok) {
-          popup.remove();
-          setTimeout(() => window.location.href = '/', 1500);
-        }
+          if (res.ok && data.token) {
+            localStorage.setItem("jwt", data.token);
+            popup.remove();
+            setTimeout(() => window.location.href = '/', 1500);
+          }
       } catch {
         alert("❌ Erro ao vincular Google.");
       }
