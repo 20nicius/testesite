@@ -214,9 +214,7 @@
             <small style="color: #b0b0b0;">O intervalo mínimo é de 10 minutos e o máximo é de 60 minutos.</small>
           </div>
         
-          <button type="button" id="saveDelayBtn" class="btn btn-primary">
-            💾 Aplicar Delay
-          </button>
+
         </div>
         
                 <!-- Botões de ação do formulário -->
@@ -678,6 +676,7 @@ document.getElementById("saveDelayBtn").addEventListener("click", async () => {
             document.getElementById("inflammableGasThreshold").value = settings.inflammableGasThreshold || 20;
             document.getElementById("toxicGasThreshold").value = settings.toxicGasThreshold || 15;
             document.getElementById("criticalGasAlert").checked = settings.criticalGasAlert === "true";
+            document.getElementById("dataSaveDelay").value = settings.dataSaveDelay || 15;
 
             // Atualizar valores exibidos dos ranges
             updateRangeValue(humidityMin, humidityMinValue, "%");
@@ -689,6 +688,7 @@ document.getElementById("saveDelayBtn").addEventListener("click", async () => {
             updateRangeValue(document.getElementById("noRainDays"), document.getElementById("noRainDaysValue"), " dias");
             updateRangeValue(document.getElementById("inflammableGasThreshold"), document.getElementById("inflammableGasThresholdValue"), "%");
             updateRangeValue(document.getElementById("toxicGasThreshold"), document.getElementById("toxicGasThresholdValue"), "%");
+            updateRangeValue(document.getElementById("dataSaveDelay"), document.getElementById("dataSaveDelayValue"), " minutos");
 
             showToast("Configurações carregadas com sucesso!", "success");
           } catch (error) {
@@ -725,6 +725,7 @@ document.getElementById("saveDelayBtn").addEventListener("click", async () => {
             inflammableGasThreshold: document.getElementById("inflammableGasThreshold").value,
             toxicGasThreshold: document.getElementById("toxicGasThreshold").value,
             criticalGasAlert: document.getElementById("criticalGasAlert").checked,
+            dataSaveDelay: document.getElementById("dataSaveDelay").value,
           };
 
           try {

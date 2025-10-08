@@ -392,6 +392,15 @@ app.get("/api/user-settings", authenticateToken, (req, res) => {
     settings.temperatureAlertsEnabled = settings.temperatureAlertsEnabled || "false";
     settings.temperatureMin = settings.temperatureMin || "10";
     settings.temperatureMax = settings.temperatureMax || "35";
+    settings.rainAlertsEnabled = settings.rainAlertsEnabled || "false";
+    settings.rainStartAlert = settings.rainStartAlert || "false";
+    settings.rainStopAlert = settings.rainStopAlert || "false";
+    settings.noRainDays = settings.noRainDays || "7";
+    settings.gasAlertsEnabled = settings.gasAlertsEnabled || "false";
+    settings.inflammableGasThreshold = settings.inflammableGasThreshold || "20";
+    settings.toxicGasThreshold = settings.toxicGasThreshold || "15";
+    settings.criticalGasAlert = settings.criticalGasAlert || "false";
+    settings.dataSaveDelay = settings.dataSaveDelay || "15";
 
     res.json(settings);
   } catch (error) {
@@ -406,6 +415,7 @@ app.post("/api/user-settings", authenticateToken, (req, res) => {
     const userEmail = req.user.email;
     const settings = req.body;
 
+    // Salvar configurações na tabela config
     db.transaction(() => {
       for (const key in settings) {
         dbRun(
@@ -414,6 +424,9 @@ app.post("/api/user-settings", authenticateToken, (req, res) => {
         );
       }
     })();
+
+    // Também atualizar as configurações de notificação no push.js
+    pushNotifications.updateUserNotificationSettings(userEmail, settings);
 
     res.json({ success: true, message: "Configurações salvas com sucesso!" });
   } catch (error) {

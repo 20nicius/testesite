@@ -285,23 +285,70 @@ class PushNotificationManager {
   // Buscar configurações de notificação do usuário
   getUserNotificationSettings(userEmail) {
     try {
-      let settings = this.db.prepare(
-        'SELECT * FROM user_notification_settings WHERE user_email = ?'
-      ).get(userEmail);
+      // Buscar configurações da tabela config
+      const configRows = this.db.prepare(`
+        SELECT chave, valor FROM config WHERE usuario_email = ?
+      `).all(userEmail);
 
-      // Se não existir, criar configurações padrão
-      if (!settings) {
-        this.db.prepare(`
-          INSERT INTO user_notification_settings (user_email)
-          VALUES (?)
-        `).run(userEmail);
+      const settings = {};
+      configRows.forEach(row => {
+        settings[row.chave] = row.valor;
+      });
 
-        settings = this.db.prepare(
-          'SELECT * FROM user_notification_settings WHERE user_email = ?'
-        ).get(userEmail);
+      // Converter para o formato esperado pelo sistema de notificações
+      const notificationSettings = {
+        push_enabled: settings.enableNotifications === 'true',
+        critical_alerts: settings.criticalGasAlert === 'true',
+        sensor_alerts: (settings.humidityAlertsEnabled === 'true' || 
+                       settings.temperatureAlertsEnabled === 'true' || 
+                       settings.rainAlertsEnabled === 'true' || 
+                       settings.gasAlertsEnabled === 'true'),
+        daily_reports: settings.dailyReports === 'true',
+        maintenance_alerts: true,
+        quiet_hours_start: settings.quietHoursStart || '22:00',
+        quiet_hours_end: settings.quietHoursEnd || '07:00',
+        // Configurações específicas dos sensores
+        humidity_alerts: settings.humidityAlertsEnabled === 'true',
+        humidity_min: parseInt(settings.humidityMin) || 30,
+        humidity_max: parseInt(settings.humidityMax) || 80,
+        soil_humidity_min: parseInt(settings.soilHumidityMin) || 20,
+        soil_humidity_max: parseInt(settings.soilHumidityMax) || 90,
+        temperature_alerts: settings.temperatureAlertsEnabled === 'true',
+        temperature_min: parseInt(settings.temperatureMin) || 10,
+        temperature_max: parseInt(settings.temperatureMax) || 35,
+        rain_alerts: settings.rainAlertsEnabled === 'true',
+        rain_start_alert: settings.rainStartAlert === 'true',
+        rain_stop_alert: settings.rainStopAlert === 'true',
+        no_rain_days: parseInt(settings.noRainDays) || 7,
+        gas_alerts: settings.gasAlertsEnabled === 'true',
+        inflammable_gas_threshold: parseInt(settings.inflammableGasThreshold) || 20,
+        toxic_gas_threshold: parseInt(settings.toxicGasThreshold) || 15,
+        data_save_delay: parseInt(settings.dataSaveDelay) || 15
+      };
+
+      // Fallback para user_notification_settings se config estiver vazia
+      if (configRows.length === 0) {
+        let legacySettings = this.db.prepare(`
+          SELECT * FROM user_notification_settings WHERE user_email = ?
+        `).get(userEmail);
+
+        if (!legacySettings) {
+          // Criar configurações padrão se não existirem
+          this.db.prepare(`
+            INSERT INTO user_notification_settings 
+            (user_email, push_enabled, critical_alerts, sensor_alerts, daily_reports, maintenance_alerts)
+            VALUES (?, 1, 1, 1, 0, 1)
+          `).run(userEmail);
+          
+          legacySettings = this.db.prepare(`
+            SELECT * FROM user_notification_settings WHERE user_email = ?
+          `).get(userEmail);
+        }
+
+        return legacySettings;
       }
 
-      return settings;
+      return notificationSettings;
     } catch (error) {
       console.error('❌ Erro ao buscar configurações:', error);
       return {
@@ -314,29 +361,53 @@ class PushNotificationManager {
         quiet_hours_end: '07:00'
       };
     }
-  }
-
-  // Atualizar configurações de notificação
-  updateUserNotificationSettings(userEmail, settings) {
+  }ateUserNotificationSettings(userEmail, settings) {
     try {
-      this.db.prepare(`
-        UPDATE user_notification_settings 
-        SET push_enabled = ?, critical_alerts = ?, sensor_alerts = ?,
-            daily_reports = ?, maintenance_alerts = ?, 
-            quiet_hours_start = ?, quiet_hours_end = ?,
-            updated_at = CURRENT_TIMESTAMP
-        WHERE user_email = ?
-      `).run(
-        settings.push_enabled ? 1 : 0,
-        settings.critical_alerts ? 1 : 0,
-        settings.sensor_alerts ? 1 : 0,
-        settings.daily_reports ? 1 : 0,
-        settings.maintenance_alerts ? 1 : 0,
-        settings.quiet_hours_start,
-        settings.quiet_hours_end,
-        userEmail
-      );
+      // Usar a tabela config para armazenar as configurações de notificação
+      const transaction = this.db.transaction(() => {
+        // Mapear as configurações para a estrutura da tabela config
+        const configMappings = {
+          enableNotifications: 'push_enabled',
+          dailyReports: 'daily_reports',
+          humidityAlertsEnabled: 'humidity_alerts',
+          temperatureAlertsEnabled: 'temperature_alerts',
+          rainAlertsEnabled: 'rain_alerts',
+          gasAlertsEnabled: 'gas_alerts',
+          criticalGasAlert: 'critical_alerts'
+        };
 
+        // Salvar configurações na tabela config
+        for (const [key, value] of Object.entries(settings)) {
+          this.db.prepare(`
+            INSERT OR REPLACE INTO config (usuario_email, chave, valor) 
+            VALUES (?, ?, ?)
+          `).run(userEmail, key, String(value));
+        }
+
+        // Também manter compatibilidade com user_notification_settings se existir
+        const userSettingsExists = this.db.prepare(`
+          SELECT COUNT(*) as count FROM user_notification_settings WHERE user_email = ?
+        `).get(userEmail);
+
+        if (userSettingsExists.count > 0) {
+          this.db.prepare(`
+            UPDATE user_notification_settings 
+            SET push_enabled = ?, critical_alerts = ?, sensor_alerts = ?,
+                daily_reports = ?, maintenance_alerts = ?, 
+                updated_at = CURRENT_TIMESTAMP
+            WHERE user_email = ?
+          `).run(
+            settings.enableNotifications ? 1 : 0,
+            settings.criticalGasAlert ? 1 : 0,
+            (settings.humidityAlertsEnabled || settings.temperatureAlertsEnabled || settings.rainAlertsEnabled || settings.gasAlertsEnabled) ? 1 : 0,
+            settings.dailyReports ? 1 : 0,
+            1, // maintenance_alerts sempre ativo
+            userEmail
+          );
+        }
+      });
+
+      transaction();
       console.log(`✅ Configurações atualizadas para usuário ${userEmail}`);
     } catch (error) {
       console.error('❌ Erro ao atualizar configurações:', error);
