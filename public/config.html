@@ -322,7 +322,7 @@
     // Função para carregar configurações do servidor
     async function loadSettings() {
       try {
-        const response = await fetch('/api/notification-settings', {
+        const response = await fetch('/api/user-settings', {
           method: 'GET',
           credentials: 'include'
         });
@@ -374,7 +374,7 @@
     // Função para salvar configurações
     async function saveSettings(formData) {
       try {
-        const response = await fetch('/api/notification-settings', {
+        const response = await fetch('/api/user-settings', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -424,41 +424,12 @@
 
     // Função para redefinir senha
     async function resetPassword() {
-      window.location.href = '/verificar.html';
+      window.location.href = '/recover';
         }
-
-    // Função para excluir conta
+        
     async function deleteAccount() {
-      if (!confirm('⚠️ ATENÇÃO: Tem certeza que deseja excluir sua conta permanentemente?\n\nEsta ação irá:\n- Apagar todos os seus dados\n- Remover seu histórico\n- Cancelar todas as configurações\n\nEsta ação NÃO PODE ser desfeita!')) {
-        return;
-      }
-
-      const confirmation = prompt('Para confirmar a exclusão da conta, digite "EXCLUIR" (em maiúsculas):');
-      if (confirmation !== 'EXCLUIR') {
-        showToast('Exclusão cancelada', 'warning');
-        return;
-      }
-
-      try {
-        const response = await fetch('/api/delete-account', {
-          method: 'DELETE',
-          credentials: 'include'
-        });
-
-        if (response.ok) {
-          showToast('Conta excluída com sucesso. Redirecionando...', 'success');
-          setTimeout(() => {
-            window.location.href = '/';
-          }, 2000);
-        } else {
-          const error = await response.json();
-          showToast('Erro ao excluir conta: ' + (error.error || 'Erro desconhecido'), 'error');
+      window.location.href = '/delete';
         }
-      } catch (error) {
-        console.error('Erro ao excluir conta:', error);
-        showToast('Erro de conexão ao excluir conta', 'error');
-      }
-    }
 
     // Inicialização da página
     document.addEventListener('DOMContentLoaded', function() {
@@ -585,185 +556,3 @@ document.getElementById("saveDelayBtn").addEventListener("click", async () => {
   </script>
 </body>
 </html>
-
-
-    <script>
-      document.addEventListener("DOMContentLoaded", async () => {
-        const configForm = document.getElementById("configForm");
-        const humidityMin = document.getElementById("humidityMin");
-        const humidityMinValue = document.getElementById("humidityMinValue");
-        const humidityMax = document.getElementById("humidityMax");
-        const humidityMaxValue = document.getElementById("humidityMaxValue");
-        const soilHumidityMin = document.getElementById("soilHumidityMin");
-        const soilHumidityMinValue = document.getElementById("soilHumidityMinValue");
-        const soilHumidityMax = document.getElementById("soilHumidityMax");
-        const soilHumidityMaxValue = document.getElementById("soilHumidityMaxValue");
-        const temperatureMin = document.getElementById("temperatureMin");
-        const temperatureMinValue = document.getElementById("temperatureMinValue");
-        const temperatureMax = document.getElementById("temperatureMax");
-        const temperatureMaxValue = document.getElementById("temperatureMaxValue");
-
-        // Função para obter o token JWT do localStorage
-        function getAuthToken() {
-          return localStorage.getItem("jwt");
-        }
-
-        // Função para exibir toasts
-        function showToast(message, type = "info") {
-          const toast = document.createElement("div");
-          toast.classList.add("toast", type);
-          toast.textContent = message;
-          document.body.appendChild(toast);
-
-          setTimeout(() => {
-            toast.classList.add("show");
-          }, 100);
-
-          setTimeout(() => {
-            toast.classList.remove("show");
-            toast.addEventListener("transitionend", () => toast.remove());
-          }, 3000);
-        }
-        window.showToast = showToast; // Tornar showToast global para push-frontend.js
-
-        // Atualizar valores dos ranges
-        const updateRangeValue = (input, output, suffix = "") => {
-          output.textContent = input.value + suffix;
-        };
-
-        humidityMin.addEventListener("input", () => updateRangeValue(humidityMin, humidityMinValue, "%"));
-        humidityMax.addEventListener("input", () => updateRangeValue(humidityMax, humidityMaxValue, "%"));
-        soilHumidityMin.addEventListener("input", () => updateRangeValue(soilHumidityMin, soilHumidityMinValue, "%"));
-        soilHumidityMax.addEventListener("input", () => updateRangeValue(soilHumidityMax, soilHumidityMaxValue, "%"));
-        temperatureMin.addEventListener("input", () => updateRangeValue(temperatureMin, temperatureMinValue, "°C"));
-        temperatureMax.addEventListener("input", () => updateRangeValue(temperatureMax, temperatureMaxValue, "°C"));
-
-        // Carregar configurações existentes
-        async function loadConfigurations() {
-          const token = getAuthToken();
-          if (!token) {
-            showToast("Você precisa estar logado para ver as configurações.", "warning");
-            return;
-          }
-
-          try {
-            const response = await fetch("/api/user-settings", {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            });
-            if (!response.ok) {
-              throw new Error(`Erro HTTP: ${response.status}`);
-            }
-            const settings = await response.json();
-
-            // Aplicar configurações aos campos do formulário
-            document.getElementById("enableNotifications").checked = settings.enableNotifications === "true";
-            document.getElementById("dailyReports").checked = settings.dailyReports === "true";
-            document.getElementById("humidityAlertsEnabled").checked = settings.humidityAlertsEnabled === "true";
-            document.getElementById("humidityMin").value = settings.humidityMin || 30;
-            document.getElementById("humidityMax").value = settings.humidityMax || 80;
-            document.getElementById("soilHumidityMin").value = settings.soilHumidityMin || 20;
-            document.getElementById("soilHumidityMax").value = settings.soilHumidityMax || 90;
-            document.getElementById("temperatureAlertsEnabled").checked = settings.temperatureAlertsEnabled === "true";
-            document.getElementById("temperatureMin").value = settings.temperatureMin || 10;
-            document.getElementById("temperatureMax").value = settings.temperatureMax || 35;
-            document.getElementById("rainAlertsEnabled").checked = settings.rainAlertsEnabled === "true";
-            document.getElementById("rainStartAlert").checked = settings.rainStartAlert === "true";
-            document.getElementById("rainStopAlert").checked = settings.rainStopAlert === "true";
-            document.getElementById("noRainDays").value = settings.noRainDays || 7;
-            document.getElementById("gasAlertsEnabled").checked = settings.gasAlertsEnabled === "true";
-            document.getElementById("inflammableGasThreshold").value = settings.inflammableGasThreshold || 20;
-            document.getElementById("toxicGasThreshold").value = settings.toxicGasThreshold || 15;
-            document.getElementById("criticalGasAlert").checked = settings.criticalGasAlert === "true";
-            document.getElementById("dataSaveDelay").value = settings.dataSaveDelay || 15;
-
-            // Atualizar valores exibidos dos ranges
-            updateRangeValue(humidityMin, humidityMinValue, "%");
-            updateRangeValue(humidityMax, humidityMaxValue, "%");
-            updateRangeValue(soilHumidityMin, soilHumidityMinValue, "%");
-            updateRangeValue(soilHumidityMax, soilHumidityMaxValue, "%");
-            updateRangeValue(temperatureMin, temperatureMinValue, "°C");
-            updateRangeValue(temperatureMax, temperatureMaxValue, "°C");
-            updateRangeValue(document.getElementById("noRainDays"), document.getElementById("noRainDaysValue"), " dias");
-            updateRangeValue(document.getElementById("inflammableGasThreshold"), document.getElementById("inflammableGasThresholdValue"), "%");
-            updateRangeValue(document.getElementById("toxicGasThreshold"), document.getElementById("toxicGasThresholdValue"), "%");
-            updateRangeValue(document.getElementById("dataSaveDelay"), document.getElementById("dataSaveDelayValue"), " minutos");
-
-            showToast("Configurações carregadas com sucesso!", "success");
-          } catch (error) {
-            console.error("Erro ao carregar configurações:", error);
-            showToast("Erro ao carregar configurações.", "error");
-          }
-        }
-
-        // Salvar configurações
-        configForm.addEventListener("submit", async (event) => {
-          event.preventDefault();
-          const token = getAuthToken();
-          if (!token) {
-            showToast("Você precisa estar logado para salvar as configurações.", "warning");
-            return;
-          }
-
-          const settings = {
-            enableNotifications: document.getElementById("enableNotifications").checked,
-            dailyReports: document.getElementById("dailyReports").checked,
-            humidityAlertsEnabled: document.getElementById("humidityAlertsEnabled").checked,
-            humidityMin: document.getElementById("humidityMin").value,
-            humidityMax: document.getElementById("humidityMax").value,
-            soilHumidityMin: document.getElementById("soilHumidityMin").value,
-            soilHumidityMax: document.getElementById("soilHumidityMax").value,
-            temperatureAlertsEnabled: document.getElementById("temperatureAlertsEnabled").checked,
-            temperatureMin: document.getElementById("temperatureMin").value,
-            temperatureMax: document.getElementById("temperatureMax").value,
-            rainAlertsEnabled: document.getElementById("rainAlertsEnabled").checked,
-            rainStartAlert: document.getElementById("rainStartAlert").checked,
-            rainStopAlert: document.getElementById("rainStopAlert").checked,
-            noRainDays: document.getElementById("noRainDays").value,
-            gasAlertsEnabled: document.getElementById("gasAlertsEnabled").checked,
-            inflammableGasThreshold: document.getElementById("inflammableGasThreshold").value,
-            toxicGasThreshold: document.getElementById("toxicGasThreshold").value,
-            criticalGasAlert: document.getElementById("criticalGasAlert").checked,
-            dataSaveDelay: document.getElementById("dataSaveDelay").value,
-          };
-
-          try {
-            const response = await fetch("/api/user-settings", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify(settings),
-            });
-
-            if (!response.ok) {
-              throw new Error(`Erro HTTP: ${response.status}`);
-            }
-
-            const result = await response.json();
-            showToast(result.message, "success");
-          } catch (error) {
-            console.error("Erro ao salvar configurações:", error);
-            showToast("Erro ao salvar configurações.", "error");
-          }
-        });
-
-        // Chamar loadConfigurations ao carregar a página
-        loadConfigurations();
-
-        // Inicializar o cliente de notificações push
-        if (typeof PushNotificationClient !== 'undefined') {
-          const pushClient = new PushNotificationClient();
-          // Adicionar um botão de teste de notificação se desejar
-          // const testNotificationBtn = document.getElementById('testNotificationBtn');
-          // if (testNotificationBtn) {
-          //   testNotificationBtn.addEventListener('click', () => pushClient.testNotification());
-          // }
-        }
-      });
-    </script>
-  </body>
-</html>
-

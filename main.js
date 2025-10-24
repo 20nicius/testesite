@@ -1,4 +1,3 @@
-// main.js - Atualizado para incluir Notificações Push
 require('dotenv').config();
 
 const express   = require('express');
@@ -12,9 +11,10 @@ const nodemailer = require('nodemailer');
 const ngrok = require('@ngrok/ngrok');
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const fs = require('fs');
 
 // Importar o módulo de Notificações Push
-const PushNotificationManager = require('./push');
+const PushNotificationManager = require('./push.js');
 
 // 1) Express + HTTP + WebSocket
 const app    = express();
@@ -30,51 +30,27 @@ let pushNotifications;
 
 // 2) SQLite + criação de tabelas
 // A inicialização do DB agora é feita em uma função assíncrona
-async function initializeDatabase() {
-  db = new Database(process.env.SQLITE_FILE || './data.db', { fileMustExist: false });
+
+    async function initializeDatabase() {
+      db = new Database(process.env.SQLITE_FILE || './data.db', { fileMustExist: false });
   try {
-    const sql = `
-      CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        email TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        token TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      );
+        // Lê o conteúdo do banco.sql
+        const sql = fs.readFileSync(path.join(__dirname, 'banco.sql'), 'utf8');
 
-      CREATE TABLE IF NOT EXISTS config (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuario_email TEXT NOT NULL,
-        chave TEXT NOT NULL,
-        valor TEXT NOT NULL,
-        UNIQUE(usuario_email, chave)
-      );
+        // Executa todas as instruções
+        db.exec(sql);
 
-      CREATE TABLE IF NOT EXISTS leituras (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_email TEXT NOT NULL,
-        temp REAL,
-        umidAr REAL,
-        umidSolo REAL,
-        gasInflamavel REAL,
-        gasToxico REAL,
-        estaChovendo INTEGER,
-        timestamp TEXT NOT NULL,
-        FOREIGN KEY(user_email) REFERENCES users(email)
-      );
-    `;
+        console.log('✅ Todas as tabelas foram criadas a partir do banco.sql');
 
-    db.exec(sql);
-    console.log('✅ Todas as tabelas do sistema foram criadas com sucesso');
+        // Inicializar o gerenciador de notificações push APÓS o DB estar pronto
+        pushNotifications = new PushNotificationManager(db);
 
-    // Inicializar o gerenciador de notificações push APÓS o DB estar pronto
-    pushNotifications = new PushNotificationManager(db);
-
-  } catch (err) {
-    console.error('❌ Erro ao criar tabelas ou inicializar push:', err.message);
-    process.exit(1); // Encerrar se o DB não puder ser inicializado
+      } catch (err) {
+        console.error('❌ Erro ao criar tabelas ou inicializar push:', err.message);
+        process.exit(1);
   }
 }
+
 
 // 3) Helpers de acesso ao banco (mantidos)
 const dbRun = (sql, params = []) => db.prepare(sql).run(params);
@@ -188,10 +164,10 @@ const transporter = nodemailer.createTransport({
 
 function obterDelay(email, dbGet) {
   const row = dbGet(
-    'SELECT valor FROM config WHERE usuario_email = ? AND chave = ?',
+    'SELECT volue FROM config WHERE user_email = ? AND key = ?',
     [email, 'delay']
   );
-  return row ? parseInt(row.valor, 10) : tempo*6e4;
+  return row ? parseInt(row.volue, 10) : tempo*6e4;
 }
 
 const createRouter = require('./router');
@@ -204,7 +180,8 @@ const { router, sensorTokenHandler } = createRouter({
   transporter,
   obterDelay: email => obterDelay(email, dbGet),
   clientesWS: {},
-  ultimoRegistroPorEmail: {}
+  ultimoRegistroPorEmail: {},
+  PushNotificationManager
 });
 
 app.use('/', router);
@@ -361,105 +338,6 @@ app.post('/api/test-notification', authenticateToken, async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error('Erro ao enviar notificação de teste:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-});
-
-// ==================== ROTAS DE CONFIGURAÇÃO DO USUÁRIO ====================
-
-// Endpoint para buscar configurações do usuário
-app.get("/api/user-settings", authenticateToken, (req, res) => {
-  try {
-    const userEmail = req.user.email;
-    const settingsRows = dbAll(
-      "SELECT chave, valor FROM config WHERE usuario_email = ?",
-      [userEmail]
-    );
-
-    const settings = {};
-    settingsRows.forEach((row) => {
-      settings[row.chave] = row.valor;
-    });
-
-    // Adicionar configurações padrão se não existirem
-    settings.enableNotifications = settings.enableNotifications || "false";
-    settings.dailyReports = settings.dailyReports || "false";
-    settings.humidityAlertsEnabled = settings.humidityAlertsEnabled || "false";
-    settings.humidityMin = settings.humidityMin || "30";
-    settings.humidityMax = settings.humidityMax || "80";
-    settings.soilHumidityMin = settings.soilHumidityMin || "20";
-    settings.soilHumidityMax = settings.soilHumidityMax || "90";
-    settings.temperatureAlertsEnabled = settings.temperatureAlertsEnabled || "false";
-    settings.temperatureMin = settings.temperatureMin || "10";
-    settings.temperatureMax = settings.temperatureMax || "35";
-    settings.rainAlertsEnabled = settings.rainAlertsEnabled || "false";
-    settings.rainStartAlert = settings.rainStartAlert || "false";
-    settings.rainStopAlert = settings.rainStopAlert || "false";
-    settings.noRainDays = settings.noRainDays || "7";
-    settings.gasAlertsEnabled = settings.gasAlertsEnabled || "false";
-    settings.inflammableGasThreshold = settings.inflammableGasThreshold || "20";
-    settings.toxicGasThreshold = settings.toxicGasThreshold || "15";
-    settings.criticalGasAlert = settings.criticalGasAlert || "false";
-    settings.dataSaveDelay = settings.dataSaveDelay || "15";
-
-    res.json(settings);
-  } catch (error) {
-    console.error("Erro ao buscar configurações do usuário:", error);
-    res.status(500).json({ error: "Erro interno do servidor" });
-  }
-});
-
-// Endpoint para salvar configurações do usuário
-app.post("/api/user-settings", authenticateToken, (req, res) => {
-  try {
-    const userEmail = req.user.email;
-    const settings = req.body;
-
-    // Salvar configurações na tabela config
-    db.transaction(() => {
-      for (const key in settings) {
-        dbRun(
-          "INSERT OR REPLACE INTO config (usuario_email, chave, valor) VALUES (?, ?, ?)",
-          [userEmail, key, String(settings[key])]
-        );
-      }
-    })();
-
-    // Também atualizar as configurações de notificação no push.js
-    pushNotifications.updateUserNotificationSettings(userEmail, settings);
-
-    res.json({ success: true, message: "Configurações salvas com sucesso!" });
-  } catch (error) {
-    console.error("Erro ao salvar configurações do usuário:", error);
-    res.status(500).json({ error: "Erro interno do servidor" });
-  }
-});
-
-// Endpoint para configurações de notificação
-app.get('/api/notification-settings', authenticateToken, (req, res) => {
-  try {
-    const userEmail = req.user.email;
-    const settings = pushNotifications.getUserNotificationSettings(userEmail);
-    res.json(settings);
-  } catch (error) {
-    console.error('Erro ao buscar configurações:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-});
-
-app.post('/api/notification-settings', authenticateToken, (req, res) => {
-  try {
-    const userEmail = req.user.email;
-    const settings = req.body;
-
-    pushNotifications.updateUserNotificationSettings(userEmail, settings);
-    
-    res.json({ 
-      success: true, 
-      message: 'Configurações atualizadas com sucesso' 
-    });
-  } catch (error) {
-    console.error('Erro ao atualizar configurações:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });

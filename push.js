@@ -34,63 +34,6 @@ class PushNotificationManager {
     console.log('✅ Web-push configurado com sucesso');
   }
 
-  createTables() {
-    try {
-      // Tabela para armazenar subscriptions dos usuários
-      this.db.exec(`
-        CREATE TABLE IF NOT EXISTS push_subscriptions (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          user_email TEXT NOT NULL,
-          endpoint TEXT NOT NULL UNIQUE,
-          p256dh_key TEXT NOT NULL,
-          auth_key TEXT NOT NULL,
-          user_agent TEXT,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          last_used DATETIME DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE CASCADE
-        )
-      `);
-
-      // Tabela para log de notificações enviadas
-      this.db.exec(`
-        CREATE TABLE IF NOT EXISTS notification_log (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          user_email TEXT,
-          subscription_id INTEGER,
-          title TEXT NOT NULL,
-          body TEXT NOT NULL,
-          data TEXT, -- JSON string
-          sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          success BOOLEAN DEFAULT 1,
-          error_message TEXT,
-          FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE SET NULL,
-          FOREIGN KEY (subscription_id) REFERENCES push_subscriptions(id) ON DELETE SET NULL
-        )
-      `);
-
-      // Tabela para configurações de notificação do usuário
-      this.db.exec(`
-        CREATE TABLE IF NOT EXISTS user_notification_settings (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          user_email TEXT NOT NULL UNIQUE,
-          push_enabled BOOLEAN DEFAULT 1,
-          critical_alerts BOOLEAN DEFAULT 1,
-          sensor_alerts BOOLEAN DEFAULT 1,
-          daily_reports BOOLEAN DEFAULT 0,
-          maintenance_alerts BOOLEAN DEFAULT 1,
-          quiet_hours_start TIME DEFAULT '22:00',
-          quiet_hours_end TIME DEFAULT '07:00',
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE CASCADE
-        )
-      `);
-
-      console.log('✅ Tabelas de push notifications criadas/verificadas');
-    } catch (error) {
-      console.error('❌ Erro ao criar tabelas de push:', error);
-    }
-  }
 
   // Salvar subscription do usuário
   saveSubscription(userEmail, subscriptionData, userAgent = '') {
@@ -287,12 +230,12 @@ class PushNotificationManager {
     try {
       // Buscar configurações da tabela config
       const configRows = this.db.prepare(`
-        SELECT chave, valor FROM config WHERE usuario_email = ?
+        SELECT key, value FROM config WHERE user_email = ?
       `).all(userEmail);
 
       const settings = {};
       configRows.forEach(row => {
-        settings[row.chave] = row.valor;
+        settings[row.key] = row.volue;
       });
 
       // Converter para o formato esperado pelo sistema de notificações
@@ -361,7 +304,9 @@ class PushNotificationManager {
         quiet_hours_end: '07:00'
       };
     }
-  }ateUserNotificationSettings(userEmail, settings) {
+  }
+  
+  updateUserNotificationSettings(userEmail, settings) {
     try {
       // Usar a tabela config para armazenar as configurações de notificação
       const transaction = this.db.transaction(() => {
@@ -379,7 +324,7 @@ class PushNotificationManager {
         // Salvar configurações na tabela config
         for (const [key, value] of Object.entries(settings)) {
           this.db.prepare(`
-            INSERT OR REPLACE INTO config (usuario_email, chave, valor) 
+            INSERT OR REPLACE INTO config (user_email, key, volue) 
             VALUES (?, ?, ?)
           `).run(userEmail, key, String(value));
         }
@@ -499,149 +444,173 @@ class PushNotificationManager {
       return [];
     }
   }
+  
+  
 
-  // Verificar alertas dos sensores
-  async checkSensorAlerts(userEmail, sensorData) {
-    try {
-      const settings = this.getUserNotificationSettings(userEmail);
-      
-      if (!settings.push_enabled || !settings.sensor_alerts) {
-        return; // Usuário não quer receber alertas
+  // Verificar alertas dos sensor
+async checkSensorAlerts(userEmail, sensorData) {
+  try {
+    const settings = this.getUserNotificationSettings(userEmail);
+    if (!settings.push_enabled || !settings.sensor_alerts) return;
+
+    const limits = {
+      temperature: {
+        min: settings.temperature_min,
+        max: settings.temperature_max
+      },
+      humidity: {
+        min: settings.humidity_min,
+        max: settings.humidity_max
+      },
+      soilHumidity: {
+        min: settings.soil_humidity_min,
+        max: settings.soil_humidity_max
+      },
+      gas: {
+        inflammable: settings.inflammable_gas_threshold,
+        toxic: settings.toxic_gas_threshold
       }
+    };
 
-      // Definir limites críticos (você pode tornar isso configurável)
-      const limits = {
-        temperature: { min: 5, max: 40 },
-        humidity: { min: 20, max: 80 },
-        gas: { max: 50 },
-        rain: { max: 100 }
-      };
-
-      // Verificar temperatura
+    // 🔥 Temperatura
+    if (settings.temperature_alerts) {
       if (sensorData.temp < limits.temperature.min) {
-        const notification = this.createSensorAlert(
-          'temperature',
-          sensorData.temp,
-          limits.temperature.min,
-          'abaixo de'
-        );
-        await this.sendNotificationToUser(userEmail, notification);
+        const n = this.createSensorAlert('temperature', sensorData.temp, limits.temperature.min, 'abaixo de');
+        await this.sendNotificationToUser(userEmail, n);
       } else if (sensorData.temp > limits.temperature.max) {
-        const notification = this.createSensorAlert(
-          'temperature',
-          sensorData.temp,
-          limits.temperature.max,
-          'acima de'
-        );
-        await this.sendNotificationToUser(userEmail, notification);
+        const n = this.createSensorAlert('temperature', sensorData.temp, limits.temperature.max, 'acima de');
+        await this.sendNotificationToUser(userEmail, n);
       }
-
-      // Verificar umidade do ar
-      if (sensorData.umidAr < limits.humidity.min) {
-        const notification = this.createSensorAlert(
-          'humidity',
-          sensorData.umidAr,
-          limits.humidity.min,
-          'abaixo de'
-        );
-        await this.sendNotificationToUser(userEmail, notification);
-      } else if (sensorData.umidAr > limits.humidity.max) {
-        const notification = this.createSensorAlert(
-          'humidity',
-          sensorData.umidAr,
-          limits.humidity.max,
-          'acima de'
-        );
-        await this.sendNotificationToUser(userEmail, notification);
-      }
-
-      // Verificar gás inflamável (sempre alerta se detectado)
-      if (sensorData.gasInflamavel > limits.gas.max) {
-        const notification = this.createSensorAlert(
-          'gas_inflamavel',
-          sensorData.gasInflamavel,
-          limits.gas.max,
-          'detectado'
-        );
-        await this.sendNotificationToUser(userEmail, notification);
-      }
-
-      // Verificar gás tóxico (sempre alerta se detectado)
-      if (sensorData.gasToxico > limits.gas.max) {
-        const notification = this.createSensorAlert(
-          'gas_toxico',
-          sensorData.gasToxico,
-          limits.gas.max,
-          'detectado'
-        );
-        await this.sendNotificationToUser(userEmail, notification);
-      }
-
-      // Verificar chuva (se estiver chovendo)
-      if (sensorData.estaChovendo === 1) {
-        const notification = this.createSensorAlert(
-          'rain',
-          'Sim',
-          'Não',
-          'detectada'
-        );
-        await this.sendNotificationToUser(userEmail, notification);
-      }
-
-    } catch (error) {
-      console.error('❌ Erro ao verificar alertas:', error);
     }
+
+    // 💧 Umidade do ar
+    if (settings.humidity_alerts) {
+      if (sensorData.umidAr < limits.humidity.min) {
+        const n = this.createSensorAlert('humidity', sensorData.umidAr, limits.humidity.min, 'abaixo de');
+        await this.sendNotificationToUser(userEmail, n);
+      } else if (sensorData.umidAr > limits.humidity.max) {
+        const n = this.createSensorAlert('humidity', sensorData.umidAr, limits.humidity.max, 'acima de');
+        await this.sendNotificationToUser(userEmail, n);
+      }
+    }
+
+    // 🌱 Umidade do solo
+    if (settings.humidity_alerts) {
+      if (sensorData.umidSolo < limits.soilHumidity.min) {
+        const n = this.createSensorAlert('soil_humidity', sensorData.umidSolo, limits.soilHumidity.min, 'abaixo de');
+        await this.sendNotificationToUser(userEmail, n);
+      } else if (sensorData.umidSolo > limits.soilHumidity.max) {
+        const n = this.createSensorAlert('soil_humidity', sensorData.umidSolo, limits.soilHumidity.max, 'acima de');
+        await this.sendNotificationToUser(userEmail, n);
+      }
+    }
+
+    // 🔥 Gás inflamável
+    if (settings.gas_alerts && sensorData.gasInflamavel > limits.gas.inflammable) {
+      const n = this.createSensorAlert('gas_inflamavel', sensorData.gasInflamavel, limits.gas.inflammable, 'detectado', settings.critical_alerts);
+      await this.sendNotificationToUser(userEmail, n);
+    }
+
+    // ☠️ Gás tóxico
+    if (settings.gas_alerts && sensorData.gasToxico > limits.gas.toxic) {
+      const n = this.createSensorAlert('gas_toxico', sensorData.gasToxico, limits.gas.toxic, 'detectado', settings.critical_alerts);
+      await this.sendNotificationToUser(userEmail, n);
+    }
+
+    // 🌧️ Início da chuva
+    if (settings.rain_alerts && settings.rain_start_alert && sensorData.estaChovendo === 1) {
+      const n = this.createSensorAlert('rain', 'Sim', 'Não', 'detectada');
+      await this.sendNotificationToUser(userEmail, n);
+    }
+
+    // 🌤️ Parada da chuva
+    if (!this.lastRainState) this.lastRainState = {};
+    const lastState = this.lastRainState[userEmail] ?? sensorData.estaChovendo;
+    if (settings.rain_alerts && settings.rain_stop_alert && lastState === 1 && sensorData.estaChovendo === 0) {
+      const n = this.createSensorAlert('rain', 'Não', 'Sim', 'parada');
+      await this.sendNotificationToUser(userEmail, n);
+    }
+    this.lastRainState[userEmail] = sensorData.estaChovendo;
+
+    // 🚱 Alerta de seca
+    if (settings.rain_alerts && settings.no_rain_days > 0) {
+      const diasSemChuva = this.db.prepare(`
+        SELECT COUNT(*) as dias
+        FROM leituras
+        WHERE user_email = ? AND estaChovendo = 1 AND DATE(timestamp) >= DATE('now', '-${settings.no_rain_days} days')
+      `).get(userEmail);
+      if (diasSemChuva.dias === 0) {
+        const n = this.createSystemAlert('Alerta de Seca', `Não chove há ${settings.no_rain_days} dias.`, 'high');
+        await this.sendNotificationToUser(userEmail, n);
+      }
+    }
+
+    // 🛠️ Alerta de manutenção
+    if (settings.maintenance_alerts) {
+      const ultima = this.db.prepare(`
+        SELECT MAX(timestamp) as ultima FROM leituras WHERE user_email = ?
+      `).get(userEmail);
+      if (ultima.ultima) {
+        const horasSemLeitura = (Date.now() - new Date(ultima.ultima)) / 36e5;
+        if (horasSemLeitura > 24) {
+          const n = this.createSystemAlert('Manutenção Requerida', 'Nenhuma leitura registrada nas últimas 24 horas.', 'high');
+          await this.sendNotificationToUser(userEmail, n);
+        }
+      }
+    }
+
+  } catch (error) {
+    console.error('❌ Erro ao verificar alertas:', error);
   }
+ }
+}
 
   // Criar notificação de alerta de sensor
-  createSensorAlert(sensorType, value, threshold, condition) {
-    const sensorNames = {
-      temperature: 'Temperatura',
-      humidity: 'Umidade do Ar',
-      gas_inflamavel: 'Gás Inflamável',
-      gas_toxico: 'Gás Tóxico',
-      rain: 'Chuva'
-    };
+createSensorAlert(sensorType, value, threshold, condition, isCritical = false) {
+  const sensorNames = {
+    temperature: 'Temperatura',
+    humidity: 'Umidade do Ar',
+    soil_humidity: 'Umidade do Solo',
+    gas_inflamavel: 'Gás Inflamável',
+    gas_toxico: 'Gás Tóxico',
+    rain: 'Chuva'
+  };
 
-    const icons = {
-      temperature: '🌡️',
-      humidity: '💧',
-      gas_inflamavel: '🔥',
-      gas_toxico: '☠️',
-      rain: '🌧️'
-    };
+  const icons = {
+    temperature: '🌡️',
+    humidity: '💧',
+    soil_humidity: '🌱',
+    gas_inflamavel: '🔥',
+    gas_toxico: '☠️',
+    rain: '🌧️'
+  };
 
-    return {
-      title: `${icons[sensorType]} Alerta de ${sensorNames[sensorType]}`,
-      body: `${sensorNames[sensorType]} ${condition}${threshold !== 'Não' ? ` ${threshold}` : ''}. Valor atual: ${value}`,
-      icon: '/icon-192x192.png',
-      badge: '/badge-72x72.png',
-      tag: `sensor-${sensorType}`,
-      requireInteraction: true,
-      actions: [
-        {
-          action: 'view',
-          title: 'Ver Dados'
-        },
-        {
-          action: 'dismiss',
-          title: 'Dispensar'
-        }
-      ],
-      data: {
-        url: '/dados',
-        sensorType,
-        value,
-        threshold,
-        timestamp: Date.now()
-      }
-    };
-  }
+  return {
+    title: `${icons[sensorType]} Alerta de ${sensorNames[sensorType]}`,
+    body: `${sensorNames[sensorType]} ${condition}${threshold !== 'Não' ? ` ${threshold}` : ''}. Valor atual: ${value}`,
+    icon: '/icon-192x192.png',
+    badge: '/badge-72x72.png',
+    tag: `sensor-${sensorType}`,
+    requireInteraction: isCritical,
+    actions: [
+      { action: 'view', title: 'Ver Dados' },
+      { action: 'dismiss', title: 'Dispensar' }
+    ],
+    data: {
+      url: '/dados',
+      sensorType,
+      value,
+      threshold,
+      priority: isCritical ? 'high' : 'normal',
+      timestamp: Date.now()
+    }
+  };
+}
 
   // Criar notificação do sistema
   createSystemAlert(title, message, priority = 'normal') {
     return {
-      title: `🐙 U.M.C.A.D - ${title}`,
+      title: `U.M.C.A.D - ${title}`,
       body: message,
       icon: '/icon-192x192.png',
       badge: '/badge-72x72.png',

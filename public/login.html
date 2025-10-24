@@ -54,8 +54,12 @@
       cursor: pointer;
       border-radius: 4px;
     }
-    button:hover {
+    button:hover:enabled {
       background-color: #2bc3ff;
+    }
+    button:disabled {
+      background-color: #555;
+      cursor: not-allowed;
     }
     #mensagem {
       text-align: center;
@@ -85,11 +89,36 @@
   <div class="container">
     <form id="loginForm">
       <div class="login">
-      <h2>🔑 Login</h2>
+        <h2>🔑 Login</h2>
       </div>
       <input type="email" id="email" placeholder="Seu e-mail" required />
-      <input type="password" id="password" placeholder="Sua senha" required />
-      <button type="submit">Entrar com E-mail</button>
+      <div style="position: relative;">
+  <input type="password" id="password" placeholder="Sua senha" required />
+  <span id="toggleSenha"
+        style="position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer; color:#ccc;">
+    <!-- Ícone olho aberto (Font Awesome "eye") -->
+    <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 576 512" fill="currentColor">
+      <path d="M572.52 241.4C518.87 135.6 407.32 64 288 64S57.13 135.6 3.48 241.4a48.07 48.07 0 0 0 0 29.3C57.13 376.4 168.68 448 288 448s230.87-71.6 284.52-177.4a48.07 48.07 0 0 0 0-29.3zM288 400c-97.2 0-182.4-54.5-229.1-144C105.6 166.5 190.8 112 288 112s182.4 54.5 229.1 144C470.4 345.5 385.2 400 288 400zm0-240a96 96 0 1 0 96 96 96.11 96.11 0 0 0-96-96z"/>
+    </svg>
+
+    <!-- Ícone olho fechado (novo Heroicons eye-slash) -->
+<svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" width="22" height="22" 
+     fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
+     style="display:none;">
+  <path stroke-linecap="round" stroke-linejoin="round" 
+        d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12
+           C3.226 16.338 7.244 19.5 12 19.5c.993 0 
+           1.953-.138 2.863-.395M6.228 6.228A10.451 
+           10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 
+           10.065 7.498a10.522 10.522 0 0 1-4.293 
+           5.774M6.228 6.228 3 3m3.228 3.228 
+           3.65 3.65m7.894 7.894L21 21m-3.228-3.228
+           -3.65-3.65m0 0a3 3 0 1 0-4.243-4.243
+           m4.242 4.242L9.88 9.88" />
+</svg>
+  </span>
+</div>
+      <button type="submit" id="actionBtn">Entrar com E-mail</button>
       <p id="mensagem"></p>
     </form>
 
@@ -97,8 +126,8 @@
     <div id="g_id_signin"></div>
 
     <div class="link">
-      <p>Não tem uma conta? <a href="/register.html">Cadastre-se aqui</a></p>
-      <p><a href="/verificar.html">Esqueci minha senha</a></p>
+      <p>Não tem uma conta? <a href="register">Cadastre-se aqui</a></p>
+      <p><a href="recover">Esqueci minha senha</a></p>
     </div>
   </div>
 
@@ -124,32 +153,89 @@
 
     const form = document.getElementById('loginForm');
     const mensagem = document.getElementById('mensagem');
+    const btn = document.getElementById('actionBtn');
+    const toggleSenha = document.getElementById('toggleSenha');
+    const passwordInput = document.getElementById('password');
+    const eyeOpen = document.getElementById('eyeOpen');
+    const eyeClosed = document.getElementById('eyeClosed');
+
+toggleSenha.addEventListener('click', () => {
+  const isPassword = passwordInput.type === 'password';
+  passwordInput.type = isPassword ? 'text' : 'password';
+  eyeOpen.style.display = isPassword ? 'none' : 'inline';
+  eyeClosed.style.display = isPassword ? 'inline' : 'none';
+});
 
 
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      mensagem.textContent = '';
-      const email = form.email.value;
-      const password = form.password.value;
-    
-      try {
-        const res = await fetch('/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
-        const data = await res.json();
-        mensagem.textContent = data.error || (res.ok ? 'Login efetuado' : 'Erro no login');
-        mensagem.style.color = res.ok ? 'green' : 'red';
-        if (res.ok && data.token) {
-          localStorage.setItem('jwt', data.token); // <-- SALVA O JWT AQUI
-          setTimeout(() => window.location.href = '/', 1500);
-        }
-      } catch {
-        mensagem.textContent = 'Erro ao conectar com o servidor.';
-        mensagem.style.color = 'red';
-      }
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  mensagem.textContent = '';
+  const email = form.email.value;
+  const password = form.password.value;
+
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  let emBloqueio = false;
+
+  try {
+    const res = await fetch('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
     });
+
+    const texto = await res.text();
+
+    if (res.status === 429) {
+      emBloqueio = true;
+      mensagem.textContent = texto;
+      mensagem.style.color = 'orange';
+
+      const match = texto.match(/(\d+)/);
+      let minutos = match ? parseInt(match[1]) : 5;
+      let segundos = minutos * 60;
+
+      function atualizarBotao() {
+        const m = Math.floor(segundos / 60);
+        const s = segundos % 60;
+        btn.textContent = `⏳ Aguarde ${m}:${s.toString().padStart(2, '0')}`;
+      }
+
+      atualizarBotao();
+      const interval = setInterval(() => {
+        segundos--;
+        atualizarBotao();
+        if (segundos <= 0) {
+          clearInterval(interval);
+          btn.disabled = false;
+          btn.textContent = originalText;
+          mensagem.textContent = '';
+        }
+      }, 1000);
+
+      return;
+    }
+
+    if (res.ok) {
+      const data = JSON.parse(texto);
+      mensagem.textContent = 'Login efetuado';
+      mensagem.style.color = 'green';
+      if (data.token) localStorage.setItem('jwt', data.token);
+      setTimeout(() => window.location.href = '/', 1500);
+    } else {
+      mensagem.textContent = texto || 'Erro no login';
+      mensagem.style.color = 'red';
+    }
+  } catch {
+    mensagem.textContent = 'Erro ao conectar com o servidor.';
+    mensagem.style.color = 'red';
+  } finally {
+    if (!emBloqueio) {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  }
+});
 
     async function handleCredentialResponse(response) {
       mensagem.textContent = '';
@@ -169,7 +255,7 @@
         mensagem.textContent = data.error || (res.ok ? 'Login efetuado' : 'Erro no login');
         mensagem.style.color = res.ok ? 'green' : 'red';
         if (res.ok && data.token) {
-          localStorage.setItem('jwt', data.token); // <-- SALVA O JWT AQUI
+          localStorage.setItem('jwt', data.token);
           setTimeout(() => window.location.href = '/', 1500);
         }
       } catch {
@@ -185,7 +271,7 @@ function mostrarPopupSenha(emailGoogle) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    background: '#222', // novo fundo
+    background: '#222',
     color: '#fff',
     padding: '20px',
     boxShadow: '0 0 10px rgba(0,0,0,0.3)',
@@ -215,7 +301,7 @@ function mostrarPopupSenha(emailGoogle) {
     .addEventListener('click', async () => {
       const senha = document.getElementById('novaSenhaGoogle').value;
       if (!senha || senha.length < 4) {
-        alert("⚠️ Defina uma senha válida (mínimo 4 caracteres).");
+        alert('⚠️ Defina uma senha válida (mínimo 4 caracteres).');
         return;
       }
       try {
@@ -224,20 +310,19 @@ function mostrarPopupSenha(emailGoogle) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: emailGoogle, password: senha })
         });
-        const msg = await res.text();
-        const mensagem = document.getElementById('mensagem');
-        mensagem.textContent = msg;
+        const resposta = await res.text();
+        mensagem.textContent = resposta;
         mensagem.style.color = res.ok ? 'green' : 'red';
         if (res.ok) {
           popup.remove();
           setTimeout(() => window.location.href = '/', 1500);
         }
       } catch {
-        alert("❌ Erro ao vincular Google.");
+        alert('❌ Erro ao vincular Google.');
       }
     });
 }
-  </script>
-</body>
-</html>
 
+        </script>
+    </body>
+</html>

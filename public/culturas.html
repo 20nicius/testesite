@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Informações de Culturas - U.M.C.A.D</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to bottom right, #0e1522, #00616C);
+      color: white;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .nav-wrapper {
+      width: 100%;
+      max-width: 1200px;
+      background-color: rgb(17, 17, 17);
+      border: 1px solid rgba(255, 255, 255, 0.171);
+      border-radius: 18px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      font-size: 1.7rem;
+      font-weight: 800;
+      gap: 8px;
+    }
+
+    .logo span {
+      font-size: 1.5rem;
+      font-weight: 800;
+    }
+
+    nav {
+      display: flex;
+      gap: 32px;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #c3c3c3;
+      font-weight: 500;
+      font-size: 1rem;
+      transition: color 0.3s ease;
+    }
+
+    nav a:hover {
+      color: white;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      color: #c2c2c2;
+      font-weight: 300;
+      line-height: 1.6;
+    }
+
+    .culturas-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    .cultura-card {
+      background: rgba(17, 17, 17, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 25px;
+      backdrop-filter: blur(10px);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .cultura-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .cultura-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .cultura-emoji {
+      font-size: 2.5rem;
+    }
+
+    .cultura-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #7edfff;
+    }
+
+    .cultura-regiao {
+      font-size: 0.9rem;
+      color: #c2c2c2;
+      margin-top: 5px;
+    }
+
+    .parametros-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .parametro {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .parametro-nome {
+      font-size: 0.9rem;
+      color: #c2c2c2;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .parametro-valor {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #7edfff;
+    }
+
+    .parametro-unidade {
+      font-size: 0.8rem;
+      color: #c2c2c2;
+      margin-left: 3px;
+    }
+
+    .comparacao-section {
+      background: rgba(17, 17, 17, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 40px;
+      backdrop-filter: blur(10px);
+    }
+
+    .comparacao-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #7edfff;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .dados-reais {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .dado-real {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      border-left: 4px solid #29b6f6;
+    }
+
+    .dado-real-nome {
+      font-size: 0.9rem;
+      color: #c2c2c2;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .dado-real-valor {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #29b6f6;
+    }
+
+    .dado-real-unidade {
+      font-size: 0.8rem;
+      color: #c2c2c2;
+      margin-left: 3px;
+    }
+
+    .status-indicador {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .status-ideal {
+      background-color: #4caf50;
+      color: white;
+    }
+
+    .status-atencao {
+      background-color: #ff9800;
+      color: white;
+    }
+
+    .status-perigo {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .botoes {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background-color: #29b6f6;
+      color: #000;
+    }
+
+    .btn-primary:hover {
+      background-color: #0288d1;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      color: #29b6f6;
+      border: 2px solid #29b6f6;
+    }
+
+    .btn-secondary:hover {
+      background-color: #29b6f6;
+      color: #000;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #c2c2c2;
+    }
+
+    .error {
+      text-align: center;
+      padding: 40px;
+      color: #f44336;
+      background: rgba(244, 67, 54, 0.1);
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    @media (max-width: 768px) {
+      .nav-wrapper {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 20px;
+      }
+
+      .culturas-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .parametros-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .dados-reais {
+        grid-template-columns: 1fr;
+      }
+
+      .botoes {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="nav-wrapper">
+    <div class="logo">🐙 <span>U.M.C.A.D</span></div>
+    <nav>
+      <a href="index.html">Início</a>
+      <a href="dados.html">Dados do Campo</a>
+      <a href="culturas.html">Culturas</a>
+      <a href="record.html">Histórico</a>
+    </nav>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <h1>🌱 Informações de Culturas</h1>
+      <p>Compare os dados ideais para cada cultura com as medições do seu campo</p>
+    </div>
+
+    <div class="comparacao-section">
+      <h2 class="comparacao-title">📊 Dados Atuais do Campo</h2>
+      <div id="dados-reais-container">
+        <div class="loading">Carregando dados do campo...</div>
+      </div>
+    </div>
+
+    <div class="culturas-grid" id="culturas-container">
+      <!-- Culturas serão carregadas aqui via JavaScript -->
+    </div>
+
+    <div class="botoes">
+      <a href="dados.html" class="btn btn-primary">📡 Ver Dados em Tempo Real</a>
+      <a href="record.html" class="btn btn-secondary">📜 Histórico Completo</a>
+    </div>
+  </div>
+
+  <script>
+    // Dados das culturas com parâmetros ideais
+    const culturasData = {
+      "milho": {
+        nome: "Milho",
+        emoji: "🌽",
+        regiao: "Região Centro-Oeste",
+        parametros: {
+          temperatura: { min: 20, max: 30, ideal: 25 },
+          umidadeSolo: { min: 60, max: 80, ideal: 70 },
+          umidadeAr: { min: 50, max: 70, ideal: 60 },
+          gasesToxicos: { max: 10, ideal: 5 },
+          gasesInflamaveis: { max: 15, ideal: 8 }
+        }
+      },
+      "soja": {
+        nome: "Soja",
+        emoji: "🫘",
+        regiao: "Região Sul",
+        parametros: {
+          temperatura: { min: 18, max: 28, ideal: 23 },
+          umidadeSolo: { min: 50, max: 70, ideal: 60 },
+          umidadeAr: { min: 60, max: 80, ideal: 70 },
+          gasesToxicos: { max: 8, ideal: 4 },
+          gasesInflamaveis: { max: 12, ideal: 6 }
+        }
+      },
+      "cafe": {
+        nome: "Café",
+        emoji: "☕",
+        regiao: "Região Sudeste",
+        parametros: {
+          temperatura: { min: 15, max: 25, ideal: 20 },
+          umidadeSolo: { min: 40, max: 60, ideal: 50 },
+          umidadeAr: { min: 70, max: 90, ideal: 80 },
+          gasesToxicos: { max: 5, ideal: 2 },
+          gasesInflamaveis: { max: 10, ideal: 5 }
+        }
+      },
+      "arroz": {
+        nome: "Arroz",
+        emoji: "🌾",
+        regiao: "Região Sul",
+        parametros: {
+          temperatura: { min: 22, max: 32, ideal: 27 },
+          umidadeSolo: { min: 80, max: 100, ideal: 90 },
+          umidadeAr: { min: 70, max: 90, ideal: 80 },
+          gasesToxicos: { max: 12, ideal: 6 },
+          gasesInflamaveis: { max: 18, ideal: 10 }
+        }
+      },
+      "feijao": {
+        nome: "Feijão",
+        emoji: "🫘",
+        regiao: "Região Nordeste",
+        parametros: {
+          temperatura: { min: 20, max: 30, ideal: 25 },
+          umidadeSolo: { min: 50, max: 70, ideal: 60 },
+          umidadeAr: { min: 50, max: 70, ideal: 60 },
+          gasesToxicos: { max: 15, ideal: 8 },
+          gasesInflamaveis: { max: 20, ideal: 12 }
+        }
+      },
+      "trigo": {
+        nome: "Trigo",
+        emoji: "🌾",
+        regiao: "Região Sul",
+        parametros: {
+          temperatura: { min: 10, max: 20, ideal: 15 },
+          umidadeSolo: { min: 40, max: 60, ideal: 50 },
+          umidadeAr: { min: 60, max: 80, ideal: 70 },
+          gasesToxicos: { max: 8, ideal: 4 },
+          gasesInflamaveis: { max: 12, ideal: 6 }
+        }
+      }
+    };
+
+    let dadosAtuais = null;
+
+    // Função para verificar status do parâmetro
+    function verificarStatus(valor, parametro) {
+      if (valor >= parametro.min && valor <= parametro.max) {
+        return 'ideal';
+      } else if (Math.abs(valor - parametro.ideal) <= (parametro.max - parametro.min) * 0.2) {
+        return 'atencao';
+      } else {
+        return 'perigo';
+      }
+    }
+
+    // Função para obter classe CSS do status
+    function getStatusClass(status) {
+      return `status-${status}`;
+    }
+
+    // Função para renderizar dados atuais
+    function renderizarDadosAtuais(dados) {
+      const container = document.getElementById('dados-reais-container');
+      
+      if (!dados) {
+        container.innerHTML = '<div class="error">❌ Não foi possível carregar os dados do campo</div>';
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="dados-reais">
+          <div class="dado-real">
+            <div class="dado-real-nome">Temperatura</div>
+            <div class="dado-real-valor">${dados.temp}°C</div>
+          </div>
+          <div class="dado-real">
+            <div class="dado-real-nome">Umidade do Solo</div>
+            <div class="dado-real-valor">${dados.umidSolo}%</div>
+          </div>
+          <div class="dado-real">
+            <div class="dado-real-nome">Umidade do Ar</div>
+            <div class="dado-real-valor">${dados.umidAr}%</div>
+          </div>
+          <div class="dado-real">
+            <div class="dado-real-nome">Gases Tóxicos</div>
+            <div class="dado-real-valor">${dados.gasToxico}%</div>
+          </div>
+          <div class="dado-real">
+            <div class="dado-real-nome">Gases Inflamáveis</div>
+            <div class="dado-real-valor">${dados.gasInflamavel}%</div>
+          </div>
+          <div class="dado-real">
+            <div class="dado-real-nome">Chuva</div>
+            <div class="dado-real-valor">${dados.estaChovendo ? '🌧️ Sim' : '☀️ Não'}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Função para renderizar culturas
+    function renderizarCulturas() {
+      const container = document.getElementById('culturas-container');
+      
+      container.innerHTML = Object.entries(culturasData).map(([key, cultura]) => {
+        let comparacao = '';
+        
+        if (dadosAtuais) {
+          const tempStatus = verificarStatus(dadosAtuais.temp, cultura.parametros.temperatura);
+          const umidSoloStatus = verificarStatus(dadosAtuais.umidSolo, cultura.parametros.umidadeSolo);
+          const umidArStatus = verificarStatus(dadosAtuais.umidAr, cultura.parametros.umidadeAr);
+          const gasToxicoStatus = verificarStatus(dadosAtuais.gasToxico, cultura.parametros.gasesToxicos);
+          const gasInflamavelStatus = verificarStatus(dadosAtuais.gasInflamavel, cultura.parametros.gasesInflamaveis);
+          
+          comparacao = `
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+              <h4 style="color: #7edfff; margin-bottom: 15px;">📊 Comparação com Dados Atuais</h4>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
+                  <div style="font-size: 0.8rem; color: #c2c2c2;">Temperatura</div>
+                  <div style="font-weight: 600;">${dadosAtuais.temp}°C <span class="status-indicador ${getStatusClass(tempStatus)}">${tempStatus.toUpperCase()}</span></div>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
+                  <div style="font-size: 0.8rem; color: #c2c2c2;">Umidade Solo</div>
+                  <div style="font-weight: 600;">${dadosAtuais.umidSolo}% <span class="status-indicador ${getStatusClass(umidSoloStatus)}">${umidSoloStatus.toUpperCase()}</span></div>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
+                  <div style="font-size: 0.8rem; color: #c2c2c2;">Umidade Ar</div>
+                  <div style="font-weight: 600;">${dadosAtuais.umidAr}% <span class="status-indicador ${getStatusClass(umidArStatus)}">${umidArStatus.toUpperCase()}</span></div>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
+                  <div style="font-size: 0.8rem; color: #c2c2c2;">Gases Tóxicos</div>
+                  <div style="font-weight: 600;">${dadosAtuais.gasToxico}% <span class="status-indicador ${getStatusClass(gasToxicoStatus)}">${gasToxicoStatus.toUpperCase()}</span></div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="cultura-card">
+            <div class="cultura-header">
+              <div class="cultura-emoji">${cultura.emoji}</div>
+              <div>
+                <div class="cultura-title">${cultura.nome}</div>
+                <div class="cultura-regiao">${cultura.regiao}</div>
+              </div>
+            </div>
+            
+            <div class="parametros-grid">
+              <div class="parametro">
+                <div class="parametro-nome">Temperatura Ideal</div>
+                <div class="parametro-valor">${cultura.parametros.temperatura.ideal}°C</div>
+                <div class="parametro-unidade">(${cultura.parametros.temperatura.min}-${cultura.parametros.temperatura.max}°C)</div>
+              </div>
+              <div class="parametro">
+                <div class="parametro-nome">Umidade do Solo</div>
+                <div class="parametro-valor">${cultura.parametros.umidadeSolo.ideal}%</div>
+                <div class="parametro-unidade">(${cultura.parametros.umidadeSolo.min}-${cultura.parametros.umidadeSolo.max}%)</div>
+              </div>
+              <div class="parametro">
+                <div class="parametro-nome">Umidade do Ar</div>
+                <div class="parametro-valor">${cultura.parametros.umidadeAr.ideal}%</div>
+                <div class="parametro-unidade">(${cultura.parametros.umidadeAr.min}-${cultura.parametros.umidadeAr.max}%)</div>
+              </div>
+              <div class="parametro">
+                <div class="parametro-nome">Gases Tóxicos</div>
+                <div class="parametro-valor">${cultura.parametros.gasesToxicos.ideal}%</div>
+                <div class="parametro-unidade">(máx: ${cultura.parametros.gasesToxicos.max}%)</div>
+              </div>
+              <div class="parametro">
+                <div class="parametro-nome">Gases Inflamáveis</div>
+                <div class="parametro-valor">${cultura.parametros.gasesInflamaveis.ideal}%</div>
+                <div class="parametro-unidade">(máx: ${cultura.parametros.gasesInflamaveis.max}%)</div>
+              </div>
+            </div>
+            
+            ${comparacao}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Função para carregar dados atuais
+    async function carregarDadosAtuais() {
+      try {
+        const response = await fetch('/historico');
+        const dados = await response.json();
+        
+        if (dados && dados.length > 0) {
+          dadosAtuais = dados[0];
+          renderizarDadosAtuais(dadosAtuais);
+          renderizarCulturas();
+        } else {
+          renderizarDadosAtuais(null);
+          renderizarCulturas();
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        renderizarDadosAtuais(null);
+        renderizarCulturas();
+      }
+    }
+
+    // Inicializar página
+    window.onload = function() {
+      carregarDadosAtuais();
+      
+      // Atualizar dados a cada 30 segundos
+      setInterval(carregarDadosAtuais, 30000);
+    };
+  </script>
+</body>
+</html>

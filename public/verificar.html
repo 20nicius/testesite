@@ -2,117 +2,250 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Recuperar Senha</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="pageTitle">Cadastro / Recuperação / Exclusão</title>
   <style>
+  @media (max-width: 480px) {
+  .box {
+    padding: 20px;
+  }
+  input, button {
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+}
     body {
       font-family: Arial, sans-serif;
-    background: linear-gradient(to bottom right, #0e1522, #00616C);
-      display: flex;
-      height: 100vh;
-      justify-content: center;
-      align-items: center;
+      background: linear-gradient(to bottom right, #0e1522, #00616C);
+      display: flex; height: 100vh;
+      justify-content: center; align-items: center;
       margin: 0;
     }
     .box {
-      background: #222;
-      padding: 30px;
-      border-radius: 8px;
-      width: 100%;
-      max-width: 400px;
-      color: white;
+      background: #222; padding: 30px; border-radius: 8px;
+      width: 100%; max-width: 400px; color: #fff;
     }
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+    h2 { text-align: center; margin-bottom: 20px; }
     input, button {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      font-size: 16px;
-      box-sizing: border-box;
+      width: 100%; padding: 10px; margin-bottom: 12px;
+      font-size: 15px; border-radius: 4px; box-sizing: border-box;
     }
     button {
-      background: #007bff;
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 4px;
+      background: #007bff; color: white; border: none; cursor: pointer;
     }
-    button:hover {
-      background: #0056b3;
-    }
-    #mensagem {
-      text-align: center;
-      font-weight: bold;
-      margin-top: 10px;
-    }
+    button:hover { background: #0056b3; }
+    #mensagem { text-align: center; font-weight: bold; margin-top: 10px; }
   </style>
 </head>
 <body>
   <div class="box">
-    <h2>🔒 Recuperar Senha</h2>
+    <h2 id="formTitle">🔐 Criar Conta</h2>
 
     <input type="email" id="email" placeholder="Seu e-mail" required />
-    <button onclick="enviarCodigo()">📩 Enviar Código</button>
+    <button onclick="enviarCodigo(this)">📨 Enviar Código</button>
 
     <input type="text" id="codigo" placeholder="Código recebido" />
-    <input type="password" id="novaSenha" placeholder="Nova senha" />
+    <div style="position: relative;">
+  <input type="password" id="senha" placeholder="Senha" required />
+  <span id="toggleSenha"
+        style="position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer; color:#ccc;">
+    <!-- Ícone olho aberto -->
+    <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 576 512" fill="currentColor">
+      <path d="M572.52 241.4C518.87 135.6 407.32 64 288 64S57.13 135.6 3.48 241.4a48.07 48.07 0 0 0 0 29.3C57.13 376.4 168.68 448 288 448s230.87-71.6 284.52-177.4a48.07 48.07 0 0 0 0-29.3zM288 400c-97.2 0-182.4-54.5-229.1-144C105.6 166.5 190.8 112 288 112s182.4 54.5 229.1 144C470.4 345.5 385.2 400 288 400zm0-240a96 96 0 1 0 96 96 96.11 96.11 0 0 0-96-96z"/>
+    </svg>
 
-    <button onclick="redefinir()">🔁 Redefinir Senha</button>
+    <!-- Ícone olho fechado (Heroicons eye-slash) -->
+    <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" width="22" height="22" 
+         fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
+         style="display:none;">
+      <path stroke-linecap="round" stroke-linejoin="round" 
+            d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12
+               C3.226 16.338 7.244 19.5 12 19.5c.993 0 
+               1.953-.138 2.863-.395M6.228 6.228A10.451 
+               10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 
+               10.065 7.498a10.522 10.522 0 0 1-4.293 
+               5.774M6.228 6.228 3 3m3.228 3.228 
+               3.65 3.65m7.894 7.894L21 21m-3.228-3.228
+               -3.65-3.65m0 0a3 3 0 1 0-4.243-4.243
+               m4.242 4.242L9.88 9.88" />
+    </svg>
+  </span>
+</div>
+
+    <button id="actionBtn" onclick="executarAcao()">✅ Cadastrar</button>
 
     <div id="mensagem"></div>
+    <p style="text-align:center; margin-top:15px;">
+      <a href="?action=register" style="color:#0af;">Criar Conta</a> | 
+      <a href="?action=recover" style="color:#0af;">Recuperar Senha</a> | 
+      <a href="?action=delete" style="color:#f55;">Excluir Conta</a>
+    </p>
   </div>
 
   <script>
-    async function enviarCodigo() {
-      const email = document.getElementById('email').value;
-      const msg = document.getElementById('mensagem');
+    // Detecta modo pela URL
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get("action") || "register";
 
-      if (!email) {
-        msg.textContent = 'Informe seu e-mail.';
-        msg.style.color = 'red';
-        return;
-      }
+    const formTitle = document.getElementById("formTitle");
+    const actionBtn = document.getElementById("actionBtn");
+    const senhaInput = document.getElementById("senha");
+    
+    // Função mostrar/ocultar senha
+    const toggleSenha = document.getElementById('toggleSenha');
+    const senhaInput = document.getElementById('senha');
+    const eyeOpen = document.getElementById('eyeOpen');
+    const eyeClosed = document.getElementById('eyeClosed');
 
-      const res = await fetch('/enviar-codigo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
+toggleSenha.addEventListener('click', () => {
+  const isPassword = senhaInput.type === 'password';
+  senhaInput.type = isPassword ? 'text' : 'password';
+  eyeOpen.style.display = isPassword ? 'none' : 'inline';
+  eyeClosed.style.display = isPassword ? 'inline' : 'none';
+});
 
-      const texto = await res.text();
-      msg.textContent = texto;
-      msg.style.color = res.ok ? 'green' : 'red';
+
+    if (action === "recover") {
+      formTitle.textContent = "🔒 Recuperar Senha";
+      actionBtn.textContent = "🔁 Redefinir Senha";
+      senhaInput.placeholder = "Nova senha";
+    } else if (action === "delete") {
+      formTitle.textContent = "🗑️ Excluir Conta";
+      actionBtn.textContent = "❌ Deletar Conta";
+      senhaInput.placeholder = "Confirme sua senha";
+    } else {
+      formTitle.textContent = "🔐 Criar Conta";
+      actionBtn.textContent = "✅ Cadastrar";
+      senhaInput.placeholder = "Sua senha";
     }
 
-    async function redefinir() {
-      const email = document.getElementById('email').value;
-      const codigo = document.getElementById('codigo').value;
-      const senha = document.getElementById('novaSenha').value;
-      const msg = document.getElementById('mensagem');
 
-      if (!email || !codigo || !senha) {
-        msg.textContent = 'Preencha todos os campos.';
-        msg.style.color = 'red';
-        return;
+async function enviarCodigo(btn) {
+  const email = document.getElementById("email").value;
+  const msg = document.getElementById("mensagem");
+
+  if (!email) {
+    msg.textContent = "Informe seu e-mail.";
+    msg.style.color = "red";
+    return;
+  }
+
+  const res = await fetch("/enviar-codigo", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email })
+  });
+
+  const texto = await res.text();
+
+  if (res.status === 429) {
+    msg.textContent = texto;
+    msg.style.color = "orange";
+
+    const match = texto.match(/(\d+)/);
+    let minutos = match ? parseInt(match[1]) : 5;
+    let segundos = minutos * 60;
+
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    atualizarBotao();
+
+    const interval = setInterval(() => {
+      segundos--;
+      atualizarBotao();
+
+      if (segundos <= 0) {
+        clearInterval(interval);
+        btn.disabled = false;
+        btn.textContent = originalText;
+        msg.textContent = "";
       }
+    }, 1000);
 
-      const res = await fetch('/redefinir-senha', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, codigo, password: senha })
-      });
-
-      const texto = await res.text();
-      msg.textContent = texto;
-      msg.style.color = res.ok ? 'green' : 'red';
-
-      if (res.ok) {
-        setTimeout(() => window.location.href = '/login.html', 2000);
-      }
+    function atualizarBotao() {
+      const m = Math.floor(segundos / 60);
+      const s = segundos % 60;
+      btn.textContent = `⏳ Aguarde ${m}:${s.toString().padStart(2, "0")}`;
     }
+
+    return;
+  }
+
+  msg.textContent = texto;
+  msg.style.color = res.ok ? "green" : "red";
+}
+
+    
+async function executarAcao() {
+  const email = document.getElementById("email").value;
+  const codigo = document.getElementById("codigo").value;
+  const senha = document.getElementById("senha").value;
+  const msg = document.getElementById("mensagem");
+  const btn = document.getElementById("actionBtn");
+
+  if (!email || !codigo || !senha) {
+    msg.textContent = "Preencha todos os campos.";
+    msg.style.color = "red";
+    return;
+  }
+
+  let endpoint;
+  if (action === "register") endpoint = "/registrar-conta";
+  else if (action === "recover") endpoint = "/redefinir-senha";
+  else if (action === "delete") {
+    if (!confirm("Tem certeza que deseja excluir sua conta?")) return;
+    endpoint = "/deletar-conta";
+  }
+
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, codigo, password: senha })
+  });
+
+  const texto = await res.text();
+
+  if (res.status === 429) {
+    msg.textContent = texto;
+    msg.style.color = "orange";
+
+    const match = texto.match(/(\d+)/);
+    let minutos = match ? parseInt(match[1]) : 5;
+    let segundos = minutos * 60;
+
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    atualizarBotao();
+
+    const interval = setInterval(() => {
+      segundos--;
+      atualizarBotao();
+
+      if (segundos <= 0) {
+        clearInterval(interval);
+        btn.disabled = false;
+        btn.textContent = originalText;
+        msg.textContent = "";
+      }
+    }, 1000);
+
+    function atualizarBotao() {
+      const m = Math.floor(segundos / 60);
+      const s = segundos % 60;
+      btn.textContent = `⏳ Aguarde ${m}:${s.toString().padStart(2, "0")}`;
+    }
+
+    return;
+  }
+
+  msg.textContent = texto;
+  msg.style.color = res.ok ? "green" : "red";
+
+  if (res.ok) {
+    setTimeout(() => window.location.href = "/login.html", 2000);
+  }
+}
+
   </script>
 </body>
 </html>
-
