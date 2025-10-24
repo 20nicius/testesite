@@ -95,10 +95,21 @@ CREATE TABLE IF NOT EXISTS user_notification_settings (
   FOREIGN KEY(user_email) REFERENCES users(email) ON DELETE CASCADE
 );
 
-CREATE TABLE login_tentativas (
-  email TEXT,
-  tipo TEXT, -- 'login' ou 'codigo'
+-- Tabela de tentativas de login (criação idempotente)
+CREATE TABLE IF NOT EXISTS login_tentativas (
+  email TEXT NOT NULL,
+  tipo TEXT NOT NULL, -- 'login' ou 'codigo'
   tentativas INTEGER DEFAULT 0,
   bloqueado_ate DATETIME,
   atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Remover duplicatas para permitir criação de índice único
+DELETE FROM login_tentativas
+WHERE rowid NOT IN (
+  SELECT MIN(rowid) FROM login_tentativas GROUP BY email, tipo
+);
+
+-- Índice único para suportar UPSERT em (email, tipo)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_login_tentativas_email_tipo
+ON login_tentativas (email, tipo);
