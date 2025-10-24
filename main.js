@@ -164,10 +164,10 @@ const transporter = nodemailer.createTransport({
 
 function obterDelay(email, dbGet) {
   const row = dbGet(
-    'SELECT volue FROM config WHERE user_email = ? AND key = ?',
+    'SELECT value FROM config WHERE user_email = ? AND key = ?',
     [email, 'delay']
   );
-  return row ? parseInt(row.volue, 10) : tempo*6e4;
+  return row ? parseInt(row.value, 10) : tempo*6e4;
 }
 
 const createRouter = require('./router');
